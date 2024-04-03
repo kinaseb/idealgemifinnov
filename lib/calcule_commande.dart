@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
 //import 'package:intl/intl.dart';
 
-
 double metrage = 0;
 double qtmetrage = 0;
 double etiqbobf = 0;
@@ -90,7 +89,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     onChanged: (String? repeat) {
                       setState(() {
                         choixRepeat = repeat!;
-        
+
                         metragecommande(
                             choixRepeat, poseChoix, txtQtCommande.text);
                         qntselonmetrage(
@@ -132,7 +131,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                             intRepeat = double.parse(choixRepeat);
                             poseChoix = intPose.toString();
                           }
-        
+
                           metragecommande(
                               choixRepeat, poseChoix, txtQtCommande.text);
                           qntselonmetrage(
@@ -144,7 +143,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-        
+
             Row(
               children: [
                 Padding(
@@ -179,14 +178,14 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   onPressed: () {
                     setState(() {
                       //double metrage= metrageCommande(choixRepeat, poseChoix, txtQtCommande);
-        
+
                       if (txtQtCommande.text != "") {
                         //intQtcommande = int.parse(txtQtCommande.text);
-        
+
                         txtQtCommande.text =
                             (int.parse(txtQtCommande.text) * 1000).toString();
                         // metrage= metrageCommande;
-        
+
                         metragecommande(
                             choixRepeat, poseChoix, txtQtCommande.text);
                       }
@@ -240,7 +239,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
               thickness: 10,
               height: 40,
             ),
-        
+
             Row(
               children: [
                 const Padding(
@@ -274,13 +273,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   onPressed: () {
                     setState(() {
                       //double metrage= metrageCommande(choixRepeat, poseChoix, txtQtCommande);
-        
+
                       if (txtQtMetrage.text != "") {
                         //intQtcommande = int.parse(txtQtCommande.text);
-        
+
                         txtQtMetrage.text =
                             (int.parse(txtQtMetrage.text) * 1000).toString();
-        
+
                         qntselonmetrage(
                             choixRepeat, poseChoix, txtQtMetrage.text);
                         // metrage= metrageCommande;
@@ -331,13 +330,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-        
+
             Divider(
               color: coulourcont,
               thickness: 10,
               height: 40,
             ),
-        
+
             Row(
               children: [
                 const Padding(
@@ -367,19 +366,73 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
               ],
             ),
 
-
-
-
-
-
-
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "Laize BF   : ",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
+                    // initialValue: "$value",
+                    controller: txtQtMetrage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Padding(
+                  // metrage label
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    "Laize BM  : ",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
+                    // initialValue: "$value",
+                    controller: txtQtMetrage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Padding(
+                  // metrage label
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    "Nbr  BF    : ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -401,13 +454,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "Chute BM: ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -429,13 +482,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "Etiq  BM   : ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -457,13 +510,43 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "prix  Sup  : ",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
+                    // initialValue: "$value",
+                    controller: txtQtMetrage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Padding(
+                  // metrage label
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    "Etq P/Rev: ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -485,170 +568,92 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "Coef         : ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
                     // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
+                    controller: txtQtMetrage,
                     textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
                   ),
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "prix TTC  : ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
                     // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
+                    controller: txtQtMetrage,
                     textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
                   ),
                 ),
               ],
             ),
-             Row(
+            Row(
               children: [
                 const Padding(
                   // metrage label
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    "Etiq BobF : ",
+                    "prix HT    : ",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
+                SizedBox(
+                  //commande
+                  width: 150,
+                  child: TextFormField(
                     // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
+                    controller: txtQtMetrage,
                     textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-             Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq BobF : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-             Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq BobF : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-             Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq BobF : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "$etiqbobf",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 25, fontWeight: FontWeight.bold),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        qntselonmetrage(
+                            choixRepeat, poseChoix, txtQtMetrage.text);
+                      });
+                    },
                   ),
                 ),
               ],
