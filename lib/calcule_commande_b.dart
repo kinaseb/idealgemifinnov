@@ -3,7 +3,7 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
 import 'package:intl/intl.dart';
-import 'package:toggle_switch/toggle_switch.dart';
+//import 'package:toggle_switch/toggle_switch.dart';
 //import 'package:intl/intl.dart';
 
 double metrage = 0;
@@ -388,8 +388,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
             ),
 
             buildInfoRowPerso("Nbr  BF    : ", nbrbobf, Colors.grey),
-            buildInfoRowPerso("Chute BM: ", chutteBobMere, Colors.grey),
+            buildInfoRowPerso("Chute BM: ", chutteBobMere, Colors.red),
             buildInfoRowPerso("Etiq  BM   : ", etiqbobMere, Colors.grey),
+            Divider(
+              color: coulourcont,
+              thickness: 10,
+              height: 40,
+            ),
 
             Row(
               children: [
@@ -433,36 +438,42 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                ToggleSwitch(
-                  minWidth: 100.0,
-                  cornerRadius: 20.0,
-                  activeBgColors: [
-                    [Colors.green[800]!],
-                    [Colors.red[800]!]
-                  ],
-                  activeFgColor: Colors.white,
-                  inactiveBgColor: Colors.grey,
-                  inactiveFgColor: Colors.white,
-                  initialLabelIndex: 1,
-                  totalSwitches: 2,
-                  labels: choixinclureList,
-                  radiusStyle: true,
-                  onToggle: (index) {
-                    setState(() {
-                      int value = index!;
+                Padding(
+                  //repeat
+                  padding: const EdgeInsets.only(left: 5.0),
+                  child: DropdownButton<String>(
+                    padding: const EdgeInsets.all(10),
+                    style: const TextStyle(
+                        fontSize: 30,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold),
+                    value: choixInclureChute,
+                    items: inclureChuteOuPas.map((String inclure) {
+                      return DropdownMenuItem<String>(
+                        value: inclure,
+                        child: Text(inclure),
+                      );
+                    }).toList(),
+                    onChanged: (String? inclure) {
+                      setState(() {
+                        choixInclureChute = inclure!;
 
-                      choixInclureChute = choixinclureList[value].toString();
-
-                      calculePrix(choixInclureChute, txtPrixSupport.text,
-                          txtLzBobM.text);
-                      calculePrixVente(txtCoeficient.text);
-                    });
-                  },
+                        calculePrix(choixInclureChute, txtPrixSupport.text,
+                            txtLzBobM.text);
+                        calculePrixVente(txtCoeficient.text);
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
             buildInfoRowPerso(
-                "Etq P/Rev: ", prixrevienEtiquetteTTC, Colors.grey),
+                "Etq P/Rev: ", prixrevienEtiquetteTTC, Colors.green),
+            Divider(
+              color: Colors.green,
+              thickness: 10,
+              height: 40,
+            ),
 
             Row(
               children: [
@@ -515,7 +526,6 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        //txtPrixTTC.text = prixEtiquetteTTC.toString();
                         calculeCoefVente(txtPrixTTC.text);
                       });
                     },
@@ -675,7 +685,7 @@ Widget buildInfoRowPerso(String label, num value, Color backgroundColor) {
         width: 200,
         color: backgroundColor,
         child: Text(
-          NumberFormat("#,###", "fr_FR").format(value),
+          NumberFormat("#,##0.00").format(value),
           style: const TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.bold,
