@@ -1,7 +1,9 @@
 import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
 import 'package:intl/intl.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 //import 'package:intl/intl.dart';
 
 double metrage = 0;
@@ -50,7 +52,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
   int value = 100000;
   int intQtcommande = 0;
   double metrageCommande = 0;
-
+  List<String> choixinclureList = ['Oui', 'Non'];
   int repeat = 0;
   int pose = 0;
   int commande = 0;
@@ -174,34 +176,8 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq BobF : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobf)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            buildInfoRowPerso("Etiq BobF : ", etiqbobf, Colors.grey),
+
             Row(
               children: [
                 Padding(
@@ -266,33 +242,8 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
             const SizedBox(
               height: 20,
             ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Metrage    : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(metrage)}",
-                    style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: coulourtxtint),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            buildInfoRowPerso("Metrage    : ", metrage, Colors.grey),
+
             Divider(
               color: coulourcont,
               thickness: 10,
@@ -361,34 +312,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
             const SizedBox(
               height: 20,
             ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Quantite   : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(qtmetrage)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            buildInfoRowPerso("Etiq BobF : ", qtmetrage, Colors.grey),
 
             Divider(
               color: coulourcont,
@@ -396,34 +320,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
               height: 40,
             ),
 
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq BobF : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobf)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            buildInfoRowPerso("Etiq BobF : ", etiqbobf, Colors.grey),
 
             Row(
               children: [
@@ -489,90 +386,11 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Nbr  BF    : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(nbrbobf)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Chute BM: ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: Colors.blueGrey,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(chutteBobMere)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etiq  BM   : ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobMere)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+
+            buildInfoRowPerso("Nbr  BF    : ", nbrbobf, Colors.grey),
+            buildInfoRowPerso("Chute BM: ", chutteBobMere, Colors.grey),
+            buildInfoRowPerso("Etiq  BM   : ", etiqbobMere, Colors.grey),
+
             Row(
               children: [
                 const Padding(
@@ -605,34 +423,35 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
               ],
             ),
 
-            Row(children: [
-              const Padding(
-                //repeat label
-                padding: EdgeInsets.all(10.0),
-                child: Text(
-                  "inclure la chutte :",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                const Padding(
+                  //repeat label
+                  padding: EdgeInsets.all(10.0),
+                  child: Text(
+                    "inclure la chutte :",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              Padding(
-                //repeat
-                padding: const EdgeInsets.only(left: 5.0),
-                child: DropdownButton<String>(
-                  padding: const EdgeInsets.all(10),
-                  style: const TextStyle(
-                      fontSize: 30,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold),
-                  value: choixInclureChute,
-                  items: inclureChuteOuPas.map((String inclure) {
-                    return DropdownMenuItem<String>(
-                      value: inclure,
-                      child: Text(inclure),
-                    );
-                  }).toList(),
-                  onChanged: (String? inclure) {
+                ToggleSwitch(
+                  minWidth: 100.0,
+                  cornerRadius: 20.0,
+                  activeBgColors: [
+                    [Colors.green[800]!],
+                    [Colors.red[800]!]
+                  ],
+                  activeFgColor: Colors.white,
+                  inactiveBgColor: Colors.grey,
+                  inactiveFgColor: Colors.white,
+                  initialLabelIndex: 1,
+                  totalSwitches: 2,
+                  labels: choixinclureList,
+                  radiusStyle: true,
+                  onToggle: (index) {
                     setState(() {
-                      choixInclureChute = inclure!;
+                      int value = index!;
+
+                      choixInclureChute = choixinclureList[value].toString();
 
                       calculePrix(choixInclureChute, txtPrixSupport.text,
                           txtLzBobM.text);
@@ -640,36 +459,11 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     });
                   },
                 ),
-              ),
-            ]),
-            Row(
-              children: [
-                const Padding(
-                  // metrage label
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Etq P/Rev: ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  //metrage
-                  width: 200,
-                  color: coulourcont,
-                  child: Text(
-                    // initialValue: "$value",
-                    //controller: qtCommande,
-                    "${NumberFormat("#,##0.0#", "fr_FR").format(prixrevienEtiquetteTTC)}",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: coulourtxtint,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
               ],
             ),
+            buildInfoRowPerso(
+                "Etq P/Rev: ", prixrevienEtiquetteTTC, Colors.grey),
+
             Row(
               children: [
                 const Padding(
@@ -814,22 +608,22 @@ void calculecoupebobine(String lzBobFtxt, String LzBobMtxt) {
 }
 
 void calculePrix(
-    String ChoixChutetxt, String PrixSupporttxt, String LzBobMertxt) {
-  int LzBobMer = 0;
-  if (PrixSupporttxt == "" || LzBobMertxt == "") {
+    String choixChutetxt, String prixSupporttxt, String lzBobMertxt) {
+  int lzBobMer = 0;
+  if (prixSupporttxt == "" || lzBobMertxt == "") {
     prixrevienEtiquetteTTC = 0;
   } else {
-    double PrixSupport = (double.parse(PrixSupporttxt)) * 1000;
+    double prixSupport = (double.parse(prixSupporttxt)) * 1000;
     //int NbrEtiqBM = int.parse(NbrEtiqBMtxt);
-    LzBobMer = int.parse(LzBobMertxt);
+    lzBobMer = int.parse(lzBobMertxt);
     //int Chute = int.parse(Chutetxt);
 
     double prixSupportsansChutte =
-        ((LzBobMer - chutteBobMere) * PrixSupport) / 1000;
+        ((lzBobMer - chutteBobMere) * prixSupport) / 1000;
 
     if (etiqbobMere != 0) {
-      if (ChoixChutetxt == "oui") {
-        prixrevienEtiquetteTTC = PrixSupport / etiqbobMere;
+      if (choixChutetxt == "oui") {
+        prixrevienEtiquetteTTC = prixSupport / etiqbobMere;
       } else {
         prixrevienEtiquetteTTC = prixSupportsansChutte / etiqbobMere;
       }
@@ -837,9 +631,9 @@ void calculePrix(
   }
 }
 
-void calculePrixVente(String Coeficienttxt) {
-  if (Coeficienttxt != "") {
-    prixEtiquetteTTC = double.parse(Coeficienttxt) * prixrevienEtiquetteTTC;
+void calculePrixVente(String coeficiEntTxt) {
+  if (coeficiEntTxt != "") {
+    prixEtiquetteTTC = double.parse(coeficiEntTxt) * prixrevienEtiquetteTTC;
 
     prixEtiquetteHT = prixEtiquetteTTC / 1.19;
     txtPrixTTC.text = prixEtiquetteTTC.toStringAsFixed(3);
@@ -852,10 +646,10 @@ void calculePrixVente(String Coeficienttxt) {
   }
 }
 
-void calculeCoefVente(String PrixTTCtxt) {
-  if (PrixTTCtxt != "") {
-    coefPrxi = double.parse(PrixTTCtxt) / prixrevienEtiquetteTTC;
-    prixEtiquetteHT = double.parse(PrixTTCtxt) / 1.19;
+void calculeCoefVente(String prixTTCtxt) {
+  if (prixTTCtxt != "") {
+    coefPrxi = double.parse(prixTTCtxt) / prixrevienEtiquetteTTC;
+    prixEtiquetteHT = double.parse(prixTTCtxt) / 1.19;
 
     txtCoeficient.text = coefPrxi.toStringAsFixed(3);
     txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
@@ -865,4 +659,31 @@ void calculeCoefVente(String PrixTTCtxt) {
     txtCoeficient.text = "0";
     txtPrixHT.text = "0";
   }
+}
+
+Widget buildInfoRowPerso(String label, num value, Color backgroundColor) {
+  return Row(
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
+      Container(
+        width: 200,
+        color: backgroundColor,
+        child: Text(
+          NumberFormat("#,###", "fr_FR").format(value),
+          style: const TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            color: Colors.black, // Couleur du texte
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    ],
+  );
 }
