@@ -1,10 +1,34 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
+import 'package:intl/intl.dart';
 //import 'package:intl/intl.dart';
 
 double metrage = 0;
 double qtmetrage = 0;
 double etiqbobf = 0;
+double etiqbobMere = 0;
+int lzbm = 1000;
+int lzbf = 0;
+int nbrbobf = 0;
+int chutteBobMere = 0;
+
+double prixrevienEtiquetteTTC = 0.0;
+double coefPrxi = 1.0;
+double prixEtiquetteTTC = 0.0;
+double prixEtiquetteHT = 0.0;
+
+NumberFormat formatnumeromillier = NumberFormat("#,###", "fr_FR");
+
+final txtQtCommande = TextEditingController();
+final txtQtMetrage = TextEditingController();
+final txtLzBobM = TextEditingController();
+final txtLzBobFille = TextEditingController();
+final txtPrixSupport = TextEditingController();
+final txtCoeficient = TextEditingController();
+final txtPrixTTC = TextEditingController();
+final txtPrixHT = TextEditingController();
 
 class ScreanCommandeMetrage extends StatefulWidget {
   const ScreanCommandeMetrage({super.key});
@@ -14,13 +38,11 @@ class ScreanCommandeMetrage extends StatefulWidget {
 }
 
 class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
-  final txtQtCommande = TextEditingController();
-  final txtQtMetrage = TextEditingController();
-
   //var chiffre = NumberFormat("#,##0", "en_US");
 
   String choixRepeat = "74";
   String poseChoix = "1";
+  String choixInclureChute = "oui";
   int intPose = 0;
   double intRepeat = 0.0;
   String labelName = "commande";
@@ -94,6 +116,10 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                             choixRepeat, poseChoix, txtQtCommande.text);
                         qntselonmetrage(
                             choixRepeat, poseChoix, txtQtMetrage.text);
+                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
+                        calculePrix(choixInclureChute, txtPrixSupport.text,
+                            txtLzBobM.text);
+                        calculePrixVente(txtCoeficient.text);
                       });
                     },
                   ),
@@ -136,6 +162,12 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                               choixRepeat, poseChoix, txtQtCommande.text);
                           qntselonmetrage(
                               choixRepeat, poseChoix, txtQtMetrage.text);
+                          calculecoupebobine(
+                              txtLzBobFille.text, txtLzBobM.text);
+
+                          calculePrix(choixInclureChute, txtPrixSupport.text,
+                              txtLzBobM.text);
+                          calculePrixVente(txtCoeficient.text);
                         },
                       );
                     },
@@ -143,7 +175,34 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 ),
               ],
             ),
-
+            Row(
+              children: [
+                const Padding(
+                  // metrage label
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    "Etiq BobF : ",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Container(
+                  //metrage
+                  width: 200,
+                  color: coulourcont,
+                  child: Text(
+                    // initialValue: "$value",
+                    //controller: qtCommande,
+                    "${formatnumeromillier.format(etiqbobf)}",
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                      color: coulourtxtint,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
             Row(
               children: [
                 Padding(
@@ -159,7 +218,8 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   //commande
                   width: 150,
                   child: TextFormField(
-                    // initialValue: "$value",
+                    //initialValue: NumberFormat("#,##0", "en_US")
+                    //  .format(double.parse(txtQtCommande.text)),
                     controller: txtQtCommande,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -224,7 +284,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$metrage",
+                    "${formatnumeromillier.format(metrage)}",
                     style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -319,7 +379,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$qtmetrage",
+                    "${formatnumeromillier.format(qtmetrage)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -354,7 +414,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$etiqbobf",
+                    "${formatnumeromillier.format(etiqbobf)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -381,15 +441,17 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtLzBobFille,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
+                        calculePrix(choixInclureChute, txtPrixSupport.text,
+                            txtLzBobM.text);
+                        calculePrixVente(txtCoeficient.text);
                       });
                     },
                   ),
@@ -411,15 +473,17 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtLzBobM,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
+                        calculePrix(choixInclureChute, txtPrixSupport.text,
+                            txtLzBobM.text);
+                        calculePrixVente(txtCoeficient.text);
                       });
                     },
                   ),
@@ -443,7 +507,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$etiqbobf",
+                    "${formatnumeromillier.format(nbrbobf)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -467,11 +531,11 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 Container(
                   //metrage
                   width: 200,
-                  color: coulourcont,
+                  color: Colors.blueGrey,
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$etiqbobf",
+                    "${formatnumeromillier.format(chutteBobMere)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -499,7 +563,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$etiqbobf",
+                    "${formatnumeromillier.format(etiqbobMere)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -525,21 +589,60 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtPrixSupport,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        calculePrix(choixInclureChute, txtPrixSupport.text,
+                            txtLzBobM.text);
+                        calculePrixVente(txtCoeficient.text);
                       });
                     },
                   ),
                 ),
               ],
             ),
+
+            Row(children: [
+              const Padding(
+                //repeat label
+                padding: EdgeInsets.all(10.0),
+                child: Text(
+                  "inclure la chutte :",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                //repeat
+                padding: const EdgeInsets.only(left: 5.0),
+                child: DropdownButton<String>(
+                  padding: const EdgeInsets.all(10),
+                  style: const TextStyle(
+                      fontSize: 30,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold),
+                  value: choixInclureChute,
+                  items: inclureChuteOuPas.map((String inclure) {
+                    return DropdownMenuItem<String>(
+                      value: inclure,
+                      child: Text(inclure),
+                    );
+                  }).toList(),
+                  onChanged: (String? inclure) {
+                    setState(() {
+                      choixInclureChute = inclure!;
+
+                      calculePrix(choixInclureChute, txtPrixSupport.text,
+                          txtLzBobM.text);
+                      calculePrixVente(txtCoeficient.text);
+                    });
+                  },
+                ),
+              ),
+            ]),
             Row(
               children: [
                 const Padding(
@@ -557,7 +660,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "$etiqbobf",
+                    "${NumberFormat("#,##0.0#", "fr_FR").format(prixrevienEtiquetteTTC)}",
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -583,15 +686,14 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtCoeficient,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        calculePrixVente(txtCoeficient.text);
                       });
                     },
                   ),
@@ -613,15 +715,15 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtPrixTTC,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        //txtPrixTTC.text = prixEtiquetteTTC.toString();
+                        calculeCoefVente(txtPrixTTC.text);
                       });
                     },
                   ),
@@ -643,16 +745,13 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   width: 150,
                   child: TextFormField(
                     // initialValue: "$value",
-                    controller: txtQtMetrage,
+                    controller: txtPrixHT,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 25, fontWeight: FontWeight.bold),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
-                      setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
-                      });
+                      setState(() {});
                     },
                   ),
                 ),
@@ -678,7 +777,7 @@ void metragecommande(
   int commande = int.parse(txtQtCommande);
 
   // Calcul du métrage
-  metrage = (commande / (1000 / (repeat * 3.175) * pose)).ceil().toDouble();
+  metrage = (commande / (1000 / (repeat * 3.175) * pose)).floor().toDouble();
 
   // Retourner le métrage calculé
 }
@@ -693,8 +792,78 @@ void qntselonmetrage(
     txtQtMetrage = "0";
   }
   int qtmetre = int.parse(txtQtMetrage);
-  etiqbobf = ((1000 / (repeat * 3.175) * pose) * 1000).ceil().toDouble();
+  etiqbobf = ((1000 / (repeat * 3.175) * pose) * 1000).floor().toDouble();
 
   // Calcul du métrage
-  qtmetrage = ((1000 / (repeat * 3.175) * pose) * qtmetre).ceil().toDouble();
+  qtmetrage = ((1000 / (repeat * 3.175) * pose) * qtmetre).floor().toDouble();
+}
+
+void calculecoupebobine(String lzBobFtxt, String LzBobMtxt) {
+  if ((lzBobFtxt != "") && (LzBobMtxt != "")) {
+    int lzBobF = int.parse(lzBobFtxt);
+    int lzBobM = int.parse(LzBobMtxt);
+
+    nbrbobf = lzBobM ~/ lzBobF;
+    chutteBobMere = lzBobM % lzBobF;
+    etiqbobMere = etiqbobf * nbrbobf;
+  } else {
+    lzbf = 0;
+    nbrbobf = 0;
+    chutteBobMere = 0;
+    etiqbobMere = 0;
+  }
+}
+
+void calculePrix(
+    String ChoixChutetxt, String PrixSupporttxt, String LzBobMertxt) {
+  int LzBobMer = 0;
+  if (PrixSupporttxt == "" || LzBobMertxt == "") {
+    prixrevienEtiquetteTTC = 0;
+  } else {
+    double PrixSupport = (double.parse(PrixSupporttxt)) * 1000;
+    //int NbrEtiqBM = int.parse(NbrEtiqBMtxt);
+    LzBobMer = int.parse(LzBobMertxt);
+    //int Chute = int.parse(Chutetxt);
+
+    double prixSupportsansChutte =
+        ((LzBobMer - chutteBobMere) * PrixSupport) / 1000;
+
+    if (etiqbobMere != 0) {
+      if (ChoixChutetxt == "oui") {
+        prixrevienEtiquetteTTC = PrixSupport / etiqbobMere;
+      } else {
+        prixrevienEtiquetteTTC = prixSupportsansChutte / etiqbobMere;
+      }
+    }
+  }
+}
+
+void calculePrixVente(String Coeficienttxt) {
+  if (Coeficienttxt != "") {
+    prixEtiquetteTTC = double.parse(Coeficienttxt) * prixrevienEtiquetteTTC;
+
+    prixEtiquetteHT = prixEtiquetteTTC / 1.19;
+    txtPrixTTC.text = prixEtiquetteTTC.toStringAsFixed(3);
+    txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
+  } else {
+    prixEtiquetteTTC = 0;
+    prixEtiquetteHT = 0;
+    txtPrixTTC.text = "0";
+    txtPrixHT.text = "0";
+  }
+}
+
+void calculeCoefVente(String PrixTTCtxt) {
+  if (PrixTTCtxt != "") {
+    coefPrxi = double.parse(PrixTTCtxt) / prixrevienEtiquetteTTC;
+    prixEtiquetteHT = double.parse(PrixTTCtxt) / 1.19;
+
+    txtCoeficient.text = coefPrxi.toStringAsFixed(3);
+    txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
+  } else {
+    coefPrxi = 0;
+
+    txtCoeficient.text = "0";
+    txtPrixHT.text = "0";
+  }
 }

@@ -103,6 +103,7 @@ List<String> nbrPose = [
   "99",
   "100",
 ];
+List<String> inclureChuteOuPas = ["oui", "non"];
 Widget labelFieldBt(
     {String labelName = "commande",
     String bttext = "1K",
