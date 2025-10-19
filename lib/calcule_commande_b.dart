@@ -4,32 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
 import 'package:intl/intl.dart';
 //import 'package:toggle_switch/toggle_switch.dart';
-//import 'package:intl/intl.dart';
-
-double metrage = 0;
-double qtmetrage = 0;
-double etiqbobf = 0;
-double etiqbobMere = 0;
-int lzbm = 1000;
-int lzbf = 0;
-int nbrbobf = 0;
-int chutteBobMere = 0;
-
-double prixrevienEtiquetteTTC = 0.0;
-double coefPrxi = 1.0;
-double prixEtiquetteTTC = 0.0;
-double prixEtiquetteHT = 0.0;
-
-NumberFormat formatnumeromillier = NumberFormat("#,###", "fr_FR");
-
-final txtQtCommande = TextEditingController();
-final txtQtMetrage = TextEditingController();
-final txtLzBobM = TextEditingController();
-final txtLzBobFille = TextEditingController();
-final txtPrixSupport = TextEditingController();
-final txtCoeficient = TextEditingController();
-final txtPrixTTC = TextEditingController();
-final txtPrixHT = TextEditingController();
 
 class ScreanCommandeMetrage extends StatefulWidget {
   const ScreanCommandeMetrage({super.key});
@@ -39,7 +13,35 @@ class ScreanCommandeMetrage extends StatefulWidget {
 }
 
 class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
-  //var chiffre = NumberFormat("#,##0", "en_US");
+  // State variables moved from global scope
+  double metrage = 0;
+  double qtmetrage = 0;
+  double etiqbobf = 0;
+  double etiqbobMere = 0;
+  int lzbm = 1000;
+  int lzbf = 0;
+  int nbrbobf = 0;
+  int chutteBobMere = 0;
+
+  double prixrevienEtiquetteTTC = 0.0;
+  double coefPrxi = 1.0;
+  double prixEtiquetteTTC = 0.0;
+  double prixEtiquetteHT = 0.0;
+
+  final NumberFormat formatnumeromillier = NumberFormat("#,###", "fr_FR");
+
+  // TextEditingControllers are now state variables
+  final txtQtCommande = TextEditingController();
+  final txtQtMetrage = TextEditingController();
+  final txtLzBobM = TextEditingController();
+  final txtLzBobFille = TextEditingController();
+  final txtPrixSupport = TextEditingController();
+  final txtCoeficient = TextEditingController();
+  final txtPrixTTC = TextEditingController();
+  final txtPrixHT = TextEditingController();
+
+  // Magic number given a descriptive name
+  static const double DENT_TO_MM_CONVERSION = 3.175;
 
   String choixRepeat = "74";
   String poseChoix = "1";
@@ -58,6 +60,30 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
   int commande = 0;
   Color coulourcont = Colors.blueGrey;
   Color coulourtxtint = Colors.white;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers and perform initial calculation
+    txtLzBobM.text = "1000";
+    _recalculateAll();
+  }
+
+  @override
+  void dispose() {
+    // Dispose controllers to prevent memory leaks
+    txtQtCommande.dispose();
+    txtQtMetrage.dispose();
+    txtLzBobM.dispose();
+    txtLzBobFille.dispose();
+    txtPrixSupport.dispose();
+    txtCoeficient.dispose();
+    txtPrixTTC.dispose();
+    txtPrixHT.dispose();
+    super.dispose();
+  }
+
+  // --- Calculation Logic moved into State class ---
 
   @override
   Widget build(BuildContext context) {
@@ -112,15 +138,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     onChanged: (String? repeat) {
                       setState(() {
                         choixRepeat = repeat!;
-
-                        metragecommande(
-                            choixRepeat, poseChoix, txtQtCommande.text);
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
-                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
-                        calculePrix(choixInclureChute, txtPrixSupport.text,
-                            txtLzBobM.text);
-                        calculePrixVente(txtCoeficient.text);
+                        _recalculateAll();
                       });
                     },
                   ),
@@ -158,17 +176,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                             intRepeat = double.parse(choixRepeat);
                             poseChoix = intPose.toString();
                           }
-
-                          metragecommande(
-                              choixRepeat, poseChoix, txtQtCommande.text);
-                          qntselonmetrage(
-                              choixRepeat, poseChoix, txtQtMetrage.text);
-                          calculecoupebobine(
-                              txtLzBobFille.text, txtLzBobM.text);
-
-                          calculePrix(choixInclureChute, txtPrixSupport.text,
-                              txtLzBobM.text);
-                          calculePrixVente(txtCoeficient.text);
+                          _recalculateAll();
                         },
                       );
                     },
@@ -202,8 +210,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        metragecommande(
-                            choixRepeat, poseChoix, txtQtCommande.text);
+                        _metragecommande();
                       });
                     },
                   ),
@@ -212,17 +219,10 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   //btn  000
                   onPressed: () {
                     setState(() {
-                      //double metrage= metrageCommande(choixRepeat, poseChoix, txtQtCommande);
-
-                      if (txtQtCommande.text != "") {
-                        //intQtcommande = int.parse(txtQtCommande.text);
-
-                        txtQtCommande.text =
-                            (int.parse(txtQtCommande.text) * 1000).toString();
-                        // metrage= metrageCommande;
-
-                        metragecommande(
-                            choixRepeat, poseChoix, txtQtCommande.text);
+                      final currentValue = int.tryParse(txtQtCommande.text) ?? 0;
+                      if (currentValue > 0) {
+                        txtQtCommande.text = (currentValue * 1000).toString();
+                        _metragecommande();
                       }
                     });
                   },
@@ -272,8 +272,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
+                        _qntselonmetrage();
                       });
                     },
                   ),
@@ -282,17 +281,10 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   //btn  000
                   onPressed: () {
                     setState(() {
-                      //double metrage= metrageCommande(choixRepeat, poseChoix, txtQtCommande);
-
-                      if (txtQtMetrage.text != "") {
-                        //intQtcommande = int.parse(txtQtCommande.text);
-
-                        txtQtMetrage.text =
-                            (int.parse(txtQtMetrage.text) * 1000).toString();
-
-                        qntselonmetrage(
-                            choixRepeat, poseChoix, txtQtMetrage.text);
-                        // metrage= metrageCommande;
+                      final currentValue = int.tryParse(txtQtMetrage.text) ?? 0;
+                      if (currentValue > 0) {
+                        txtQtMetrage.text = (currentValue * 1000).toString();
+                        _qntselonmetrage();
                       }
                     });
                   },
@@ -344,10 +336,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
-                        calculePrix(choixInclureChute, txtPrixSupport.text,
-                            txtLzBobM.text);
-                        calculePrixVente(txtCoeficient.text);
+                        _recalculateAll();
                       });
                     },
                   ),
@@ -376,10 +365,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        calculecoupebobine(txtLzBobFille.text, txtLzBobM.text);
-                        calculePrix(choixInclureChute, txtPrixSupport.text,
-                            txtLzBobM.text);
-                        calculePrixVente(txtCoeficient.text);
+                        _recalculateAll();
                       });
                     },
                   ),
@@ -418,9 +404,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        calculePrix(choixInclureChute, txtPrixSupport.text,
-                            txtLzBobM.text);
-                        calculePrixVente(txtCoeficient.text);
+                        _recalculateAll();
                       });
                     },
                   ),
@@ -457,10 +441,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     onChanged: (String? inclure) {
                       setState(() {
                         choixInclureChute = inclure!;
-
-                        calculePrix(choixInclureChute, txtPrixSupport.text,
-                            txtLzBobM.text);
-                        calculePrixVente(txtCoeficient.text);
+                        _recalculateAll();
                       });
                     },
                   ),
@@ -497,7 +478,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        calculePrixVente(txtCoeficient.text);
+                        _calculePrixVente();
                       });
                     },
                   ),
@@ -526,7 +507,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        calculeCoefVente(txtPrixTTC.text);
+                        _calculeCoefVente();
                       });
                     },
                   ),
@@ -565,109 +546,104 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
       ),
     );
   }
-}
 
-void metragecommande(
-    String choixRepeat, String poseChoix, String txtQtCommande) {
-  // Vérification des entrées
-
-  // Conversion des entrées en types numériques
-  int repeat = int.parse(choixRepeat);
-  int pose = int.parse(poseChoix);
-  if (txtQtCommande == "") {
-    txtQtCommande = "0";
+  void _recalculateAll() {
+    _metragecommande();
+    _qntselonmetrage();
+    _calculecoupebobine();
+    _calculePrix();
+    _calculePrixVente();
   }
-  int commande = int.parse(txtQtCommande);
 
-  // Calcul du métrage
-  metrage = (commande / (1000 / (repeat * 3.175) * pose)).floor().toDouble();
+  void _metragecommande() {
+    final repeat = int.tryParse(choixRepeat) ?? 0;
+    final pose = int.tryParse(poseChoix) ?? 0;
+    final commande = int.tryParse(txtQtCommande.text) ?? 0;
 
-  // Retourner le métrage calculé
-}
-
-void qntselonmetrage(
-    String choixRepeat, String poseChoix, String txtQtMetrage) {
-  // Conversion des entrées en types numériques
-  int repeat = int.parse(choixRepeat);
-  int pose = int.parse(poseChoix);
-
-  if (txtQtMetrage == "") {
-    txtQtMetrage = "0";
-  }
-  int qtmetre = int.parse(txtQtMetrage);
-  etiqbobf = ((1000 / (repeat * 3.175) * pose) * 1000).floor().toDouble();
-
-  // Calcul du métrage
-  qtmetrage = ((1000 / (repeat * 3.175) * pose) * qtmetre).floor().toDouble();
-}
-
-void calculecoupebobine(String lzBobFtxt, String lzBobMtxt) {
-  if ((lzBobFtxt != "") && (lzBobMtxt != "")) {
-    int lzBobF = int.parse(lzBobFtxt);
-    int lzBobM = int.parse(lzBobMtxt);
-
-    nbrbobf = lzBobM ~/ lzBobF;
-    chutteBobMere = lzBobM % lzBobF;
-    etiqbobMere = etiqbobf * nbrbobf;
-  } else {
-    lzbf = 0;
-    nbrbobf = 0;
-    chutteBobMere = 0;
-    etiqbobMere = 0;
-  }
-}
-
-void calculePrix(
-    String choixChutetxt, String prixSupporttxt, String lzBobMertxt) {
-  int lzBobMer = 0;
-  if (prixSupporttxt == "" || lzBobMertxt == "") {
-    prixrevienEtiquetteTTC = 0;
-  } else {
-    double prixSupport = (double.parse(prixSupporttxt)) * 1000;
-    //int NbrEtiqBM = int.parse(NbrEtiqBMtxt);
-    lzBobMer = int.parse(lzBobMertxt);
-    //int Chute = int.parse(Chutetxt);
-
-    double prixSupportsansChutte =
-        ((lzBobMer - chutteBobMere) * prixSupport) / 1000;
-
-    if (etiqbobMere != 0) {
-      if (choixChutetxt == "oui") {
-        prixrevienEtiquetteTTC = prixSupport / etiqbobMere;
-      } else {
-        prixrevienEtiquetteTTC = prixSupportsansChutte / etiqbobMere;
-      }
+    if (repeat > 0 && pose > 0 && commande > 0) {
+      metrage = (commande / (1000 / (repeat * DENT_TO_MM_CONVERSION) * pose))
+          .floor()
+          .toDouble();
+    } else {
+      metrage = 0;
     }
   }
-}
 
-void calculePrixVente(String coeficiEntTxt) {
-  if (coeficiEntTxt != "") {
-    prixEtiquetteTTC = double.parse(coeficiEntTxt) * prixrevienEtiquetteTTC;
+  void _qntselonmetrage() {
+    final repeat = int.tryParse(choixRepeat) ?? 0;
+    final pose = int.tryParse(poseChoix) ?? 0;
+    final qtmetre = int.tryParse(txtQtMetrage.text) ?? 0;
 
-    prixEtiquetteHT = prixEtiquetteTTC / 1.19;
-    txtPrixTTC.text = prixEtiquetteTTC.toStringAsFixed(3);
-    txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
-  } else {
-    prixEtiquetteTTC = 0;
-    prixEtiquetteHT = 0;
-    txtPrixTTC.text = "0";
-    txtPrixHT.text = "0";
+    if (repeat > 0 && pose > 0) {
+      etiqbobf = ((1000 / (repeat * DENT_TO_MM_CONVERSION) * pose) * 1000)
+          .floor()
+          .toDouble();
+      if (qtmetre > 0) {
+        qtmetrage = ((1000 / (repeat * DENT_TO_MM_CONVERSION) * pose) * qtmetre)
+            .floor()
+            .toDouble();
+      } else {
+        qtmetrage = 0;
+      }
+    } else {
+      etiqbobf = 0;
+      qtmetrage = 0;
+    }
   }
-}
 
-void calculeCoefVente(String prixTTCtxt) {
-  if (prixTTCtxt != "") {
-    coefPrxi = double.parse(prixTTCtxt) / prixrevienEtiquetteTTC;
-    prixEtiquetteHT = double.parse(prixTTCtxt) / 1.19;
+  void _calculecoupebobine() {
+    final lzBobF = int.tryParse(txtLzBobFille.text) ?? 0;
+    final lzBobM = int.tryParse(txtLzBobM.text) ?? 0;
 
-    txtCoeficient.text = coefPrxi.toStringAsFixed(3);
-    txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
-  } else {
-    coefPrxi = 0;
+    if (lzBobF > 0 && lzBobM > 0) {
+      nbrbobf = lzBobM ~/ lzBobF;
+      chutteBobMere = lzBobM % lzBobF;
+      etiqbobMere = etiqbobf * nbrbobf;
+    } else {
+      nbrbobf = 0;
+      chutteBobMere = 0;
+      etiqbobMere = 0;
+    }
+  }
 
-    txtCoeficient.text = "0";
-    txtPrixHT.text = "0";
+  void _calculePrix() {
+    final prixSupport = double.tryParse(txtPrixSupport.text) ?? 0.0;
+    final lzBobMer = int.tryParse(txtLzBobM.text) ?? 0;
+
+    if (prixSupport > 0 && lzBobMer > 0 && etiqbobMere > 0) {
+      final prixSupportM2 = prixSupport * 1000;
+      if (choixInclureChute == "oui") {
+        prixrevienEtiquetteTTC = prixSupportM2 / etiqbobMere;
+      } else {
+        final prixSupportsansChutte =
+            ((lzBobMer - chutteBobMere) * prixSupportM2) / 1000;
+        prixrevienEtiquetteTTC = prixSupportsansChutte / etiqbobMere;
+      }
+    } else {
+      prixrevienEtiquetteTTC = 0;
+    }
+  }
+
+  void _calculePrixVente() {
+    final coef = double.tryParse(txtCoeficient.text) ?? 0.0;
+    if (coef > 0 && prixrevienEtiquetteTTC > 0) {
+      prixEtiquetteTTC = coef * prixrevienEtiquetteTTC;
+      prixEtiquetteHT = prixEtiquetteTTC / 1.19;
+      txtPrixTTC.text = prixEtiquetteTTC.toStringAsFixed(3);
+      txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
+    } else {
+      // Keep user input if any, otherwise clear
+    }
+  }
+
+  void _calculeCoefVente() {
+    final prixTTC = double.tryParse(txtPrixTTC.text) ?? 0.0;
+    if (prixTTC > 0 && prixrevienEtiquetteTTC > 0) {
+      coefPrxi = prixTTC / prixrevienEtiquetteTTC;
+      prixEtiquetteHT = prixTTC / 1.19;
+      txtCoeficient.text = coefPrxi.toStringAsFixed(3);
+      txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);
+    }
   }
 }
 
