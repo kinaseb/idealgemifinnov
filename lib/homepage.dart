@@ -24,14 +24,14 @@ class _HomePageState extends State<HomePage> {
           ),
           Text(
             haut.text,
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white, fontSize: 35, fontStyle: FontStyle.italic),
           ),
-          SizedBox(
+          const SizedBox(
             height: 30,
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 200.0),
+          const Padding(
+            padding:  EdgeInsets.only(right: 200.0),
             child: Text(
               'Question 3/4',
               style: TextStyle(
@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
                   fontStyle: FontStyle.italic),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 60,
           ),
           Stack(
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20)),
               ),
-              Positioned(
+              const Positioned(
                 top: -30,
                 left: 0,
                 right: 0,
@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 top: 0,
                 bottom: 0,
                 //left: -10,
@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                   backgroundColor: Colors.black,
                 ),
               ),
-              Positioned(
+              const Positioned(
                 top: 0,
                 bottom: 0,
                 left: -25,
@@ -89,8 +89,8 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           TextFormField(
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
               border: InputBorder.none,
               hintText: 'Type Here',
               hintStyle: TextStyle(color: Colors.white),
@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
             controller: haut,
           ),
           FloatingActionButton(onPressed: () {
-            print(haut.text);
+            // print(haut.text);
           }),
         ],
       ),

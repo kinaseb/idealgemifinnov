@@ -295,7 +295,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
               ),
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Row(
@@ -311,7 +311,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                 width: 155,
                 color: Colors.grey,
                 child: Text(
-                  "$metrageStr",
+                  metrageStr,
                   style: const TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,

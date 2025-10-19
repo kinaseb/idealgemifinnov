@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
 import 'package:intl/intl.dart';
@@ -191,7 +191,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobf)}",
+                    formatnumeromillier.format(etiqbobf),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -283,7 +283,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(metrage)}",
+                    formatnumeromillier.format(metrage),
                     style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -378,7 +378,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(qtmetrage)}",
+                    formatnumeromillier.format(qtmetrage),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -413,7 +413,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobf)}",
+                    formatnumeromillier.format(etiqbobf),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -506,7 +506,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(nbrbobf)}",
+                    formatnumeromillier.format(nbrbobf),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -534,7 +534,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(chutteBobMere)}",
+                    formatnumeromillier.format(chutteBobMere),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -562,7 +562,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${formatnumeromillier.format(etiqbobMere)}",
+                    formatnumeromillier.format(etiqbobMere),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -659,7 +659,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
                   child: Text(
                     // initialValue: "$value",
                     //controller: qtCommande,
-                    "${NumberFormat("#,##0.0#", "fr_FR").format(prixrevienEtiquetteTTC)}",
+                    NumberFormat("#,##0.0#", "fr_FR").format(prixrevienEtiquetteTTC),
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
@@ -797,10 +797,10 @@ void qntselonmetrage(
   qtmetrage = ((1000 / (repeat * 3.175) * pose) * qtmetre).floor().toDouble();
 }
 
-void calculecoupebobine(String lzBobFtxt, String LzBobMtxt) {
-  if ((lzBobFtxt != "") && (LzBobMtxt != "")) {
+void calculecoupebobine(String lzBobFtxt, String lzBobMtxt) {
+  if ((lzBobFtxt != "") && (lzBobMtxt != "")) {
     int lzBobF = int.parse(lzBobFtxt);
-    int lzBobM = int.parse(LzBobMtxt);
+    int lzBobM = int.parse(lzBobMtxt);
 
     nbrbobf = lzBobM ~/ lzBobF;
     chutteBobMere = lzBobM % lzBobF;
@@ -814,22 +814,22 @@ void calculecoupebobine(String lzBobFtxt, String LzBobMtxt) {
 }
 
 void calculePrix(
-    String ChoixChutetxt, String PrixSupporttxt, String LzBobMertxt) {
-  int LzBobMer = 0;
-  if (PrixSupporttxt == "" || LzBobMertxt == "") {
+    String choixChutetxt, String prixSupporttxt, String lzBobMertxt) {
+  int lzBobMer = 0;
+  if (prixSupporttxt == "" || lzBobMertxt == "") {
     prixrevienEtiquetteTTC = 0;
   } else {
-    double PrixSupport = (double.parse(PrixSupporttxt)) * 1000;
+    double prixSupport = (double.parse(prixSupporttxt)) * 1000;
     //int NbrEtiqBM = int.parse(NbrEtiqBMtxt);
-    LzBobMer = int.parse(LzBobMertxt);
+    lzBobMer = int.parse(lzBobMertxt);
     //int Chute = int.parse(Chutetxt);
 
     double prixSupportsansChutte =
-        ((LzBobMer - chutteBobMere) * PrixSupport) / 1000;
+        ((lzBobMer - chutteBobMere) * prixSupport) / 1000;
 
     if (etiqbobMere != 0) {
-      if (ChoixChutetxt == "oui") {
-        prixrevienEtiquetteTTC = PrixSupport / etiqbobMere;
+      if (choixChutetxt == "oui") {
+        prixrevienEtiquetteTTC = prixSupport / etiqbobMere;
       } else {
         prixrevienEtiquetteTTC = prixSupportsansChutte / etiqbobMere;
       }
@@ -837,9 +837,9 @@ void calculePrix(
   }
 }
 
-void calculePrixVente(String Coeficienttxt) {
-  if (Coeficienttxt != "") {
-    prixEtiquetteTTC = double.parse(Coeficienttxt) * prixrevienEtiquetteTTC;
+void calculePrixVente(String coeficienttxt) {
+  if (coeficienttxt != "") {
+    prixEtiquetteTTC = double.parse(coeficienttxt) * prixrevienEtiquetteTTC;
 
     prixEtiquetteHT = prixEtiquetteTTC / 1.19;
     txtPrixTTC.text = prixEtiquetteTTC.toStringAsFixed(3);
@@ -852,10 +852,10 @@ void calculePrixVente(String Coeficienttxt) {
   }
 }
 
-void calculeCoefVente(String PrixTTCtxt) {
-  if (PrixTTCtxt != "") {
-    coefPrxi = double.parse(PrixTTCtxt) / prixrevienEtiquetteTTC;
-    prixEtiquetteHT = double.parse(PrixTTCtxt) / 1.19;
+void calculeCoefVente(String prixTTCtxt) {
+  if (prixTTCtxt != "") {
+    coefPrxi = double.parse(prixTTCtxt) / prixrevienEtiquetteTTC;
+    prixEtiquetteHT = double.parse(prixTTCtxt) / 1.19;
 
     txtCoeficient.text = coefPrxi.toStringAsFixed(3);
     txtPrixHT.text = prixEtiquetteHT.toStringAsFixed(3);

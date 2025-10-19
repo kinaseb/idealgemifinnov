@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/class/donnees.dart';
@@ -469,7 +469,7 @@ class _ScreanCommandeMetrageState extends State<ScreanCommandeMetrage> {
             ),
             buildInfoRowPerso(
                 "Etq P/Rev: ", prixrevienEtiquetteTTC, Colors.green),
-            Divider(
+            const Divider(
               color: Colors.green,
               thickness: 10,
               height: 40,
@@ -601,10 +601,10 @@ void qntselonmetrage(
   qtmetrage = ((1000 / (repeat * 3.175) * pose) * qtmetre).floor().toDouble();
 }
 
-void calculecoupebobine(String lzBobFtxt, String LzBobMtxt) {
-  if ((lzBobFtxt != "") && (LzBobMtxt != "")) {
+void calculecoupebobine(String lzBobFtxt, String lzBobMtxt) {
+  if ((lzBobFtxt != "") && (lzBobMtxt != "")) {
     int lzBobF = int.parse(lzBobFtxt);
-    int lzBobM = int.parse(LzBobMtxt);
+    int lzBobM = int.parse(lzBobMtxt);
 
     nbrbobf = lzBobM ~/ lzBobF;
     chutteBobMere = lzBobM % lzBobF;

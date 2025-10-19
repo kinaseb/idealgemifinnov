@@ -5,14 +5,16 @@ import 'package:intl/intl.dart';
 class OptimizedWidget extends StatelessWidget {
   final NumberFormat formatNumeriqueMillier = NumberFormat("#,###");
 
+  OptimizedWidget({super.key});
+
   Widget buildInfoRow(String label, int value, Color backgroundColor) {
     return Row(
       children: [
         Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8.0),
           child: Text(
             label,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         Container(
@@ -20,7 +22,7 @@ class OptimizedWidget extends StatelessWidget {
           color: backgroundColor,
           child: Text(
             formatNumeriqueMillier.format(value),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.bold,
               color: Colors.black, // Couleur du texte
