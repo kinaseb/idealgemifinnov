@@ -184,11 +184,11 @@ class Etiquette {
 
 //TODO : calculer nombre de Etiquette par Bobine Mere
 
-  List<int> nbEtiquetParBobMere(int lbob) {
+  List<int> nbEtiquetParBobMere() {
     int poseDevloppement = poseParLaize * poseParRepeat;
     int bobFille = bobM ~/ calcLaize(100)[0];
 
-    return [bobFille];
+    return [bobFille, poseDevloppement];
   }
 
 // ignore: todo
