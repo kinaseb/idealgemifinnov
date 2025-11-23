@@ -291,11 +291,11 @@ class _CalculCoupePageState extends State<CalculCoupePage> {
                             flex: 2,
                             child: TextFormField(
                               controller: cut.widthController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Laize (mm)',
-                                border: const OutlineInputBorder(),
+                                border: OutlineInputBorder(),
                                 isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
+                                contentPadding: EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 12),
                               ),
                               keyboardType: TextInputType.number,

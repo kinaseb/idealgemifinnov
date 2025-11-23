@@ -64,7 +64,7 @@ class CalculMetragePage extends StatelessWidget {
                                       value: repeat,
                                       child: Text(
                                         repeat,
-                                        style: TextStyle(fontSize: 22),
+                                        style: const TextStyle(fontSize: 22),
                                       ));
                                 }).toList(),
                                 onChanged: onRepeatChanged,
@@ -88,7 +88,7 @@ class CalculMetragePage extends StatelessWidget {
                                       value: e,
                                       child: Text(
                                         e,
-                                        style: TextStyle(fontSize: 22),
+                                        style: const TextStyle(fontSize: 22),
                                       ));
                                 }).toList(),
                                 onChanged: onPoseChanged,
@@ -127,7 +127,7 @@ class CalculMetragePage extends StatelessWidget {
                   Expanded(
                     child: TextFormField(
                       controller: txtQtCommande,
-                      style: TextStyle(fontSize: 22),
+                      style: const TextStyle(fontSize: 22),
                       decoration: const InputDecoration(
                         labelText: 'Quantité commandée',
                         prefixIcon: Icon(Icons.shopping_cart),
@@ -170,7 +170,7 @@ class CalculMetragePage extends StatelessWidget {
                   Expanded(
                     child: TextFormField(
                       controller: txtQtMetrage,
-                      style: TextStyle(fontSize: 22),
+                      style: const TextStyle(fontSize: 22),
                       decoration: const InputDecoration(
                         labelText: 'Métrage en stock',
                         prefixIcon: Icon(Icons.inventory),

@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   intl: ^0.19.0
   toggle_switch: ^2.3.0
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -87,3 +88,12 @@ flutter:
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/ideal_logo.jpg"
+  windows:
+    generate: true
+    image_path: "assets/images/ideal_logo.jpg"
+    icon_size: 48

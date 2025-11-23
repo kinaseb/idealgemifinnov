@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 
 // To track the last field edited by the user
 enum _LastEdited { d, perimetre, largSleeve, largEtuit }
@@ -63,17 +62,17 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
 
     // Add listeners to controllers
     final allControllers = {
-      _dController: () => _onInputChanged(),
-      _perimetreController: () => _onInputChanged(),
-      _largSleeveController: () => _onInputChanged(),
-      _largEtuitController: () => _onInputChanged(),
-      _lcController: () => _onInputChanged(),
-      _sccController: () => _onInputChanged(),
-      _retractController: () => _onInputChanged(),
-      _scdController: () => _onInputChanged(),
-      _scgController: () => _onInputChanged(),
-      _gbController: () => _onInputChanged(),
-      _spoteController: () => _onInputChanged(),
+      _dController: _onInputChanged,
+      _perimetreController: _onInputChanged,
+      _largSleeveController: _onInputChanged,
+      _largEtuitController: _onInputChanged,
+      _lcController: _onInputChanged,
+      _sccController: _onInputChanged,
+      _retractController: _onInputChanged,
+      _scdController: _onInputChanged,
+      _scgController: _onInputChanged,
+      _gbController: _onInputChanged,
+      _spoteController: _onInputChanged,
     };
     allControllers.forEach((controller, listener) => controller.addListener(listener));
     
@@ -266,21 +265,21 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
   }
 
   Widget _buildTechniqueParamsCard() {
-    final fields = [ const SizedBox(height: 10), const SizedBox(height: 10),
-      _buildTextField('Collage', _lcController),
-      _buildTextField('Contre collage', _sccController),
-      _buildTextField('Securite droite', _scdController),
-      _buildTextField('Securite gauche', _scgController),
-      _buildTextField('Rétraction', _retractController),
-      _buildTextField('Guide bande', _gbController),
-      _buildTextField('Spote', _spoteController),
+    final fields = [
+      _buildTextField('Collage', _lcController, icon: Icons.layers_outlined),
+      _buildTextField('Contre collage', _sccController, icon: Icons.security_outlined),
+      _buildTextField('Securite droite', _scdController, icon: Icons.arrow_forward_outlined),
+      _buildTextField('Securite gauche', _scgController, icon: Icons.arrow_back_outlined),
+      _buildTextField('Rétraction', _retractController, icon: Icons.compress_outlined),
+      _buildTextField('Guide bande', _gbController, icon: Icons.compare_arrows_outlined),
+      _buildTextField('Spote', _spoteController, icon: Icons.adjust_outlined),
     ];
     
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: const Text("Paramètres Techniques (en mm)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text("Paramètres Techniques (en mm)"),
         initiallyExpanded: false,
         children: [
           Padding(
@@ -293,7 +292,7 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 3.5, // Adusted for compactness
+                  childAspectRatio: 3.5, // Adjusted for compactness
                   children: fields,
                 ),
                 const SizedBox(height: 16),
@@ -321,7 +320,8 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
   }
 
   Widget _buildMainCalculatorCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -336,13 +336,13 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                color: isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.5) : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  _buildTextField('Diamètre de la Forme (D)', _dController, focusNode: _dFocusNode, icon: Icons.circle_notifications_outlined),
+                  _buildTextField('Diamètre de la Forme (D)', _dController, focusNode: _dFocusNode, icon: Icons.circle_outlined),
                   const SizedBox(height: 10),
                   _buildTextField('Périmètre de la forme', _perimetreController, focusNode: _perimetreFocusNode, icon: Icons.donut_large_outlined),
                   const SizedBox(height: 10),
@@ -352,22 +352,21 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: ToggleSwitch(
-                minWidth: 150.0,
-                initialLabelIndex: _isSpoteExterne ? 0 : 1,
-                cornerRadius: 20.0,
-                activeBgColor: const [Colors.green],
-                inactiveBgColor: Colors.red.shade300,
-                inactiveFgColor: Colors.white,
-                totalSwitches: 2,
-                labels: const ['Spote Externe', 'Spote Interne'],
-                onToggle: (index) {
-                  setState(() => _isSpoteExterne = index == 0);
+            const SizedBox(height: 10),
+            ListTile(
+              title: const Text('Inclure le Spote externe'),
+              trailing: Switch(
+                value: _isSpoteExterne,
+                onChanged: (value) {
+                  setState(() => _isSpoteExterne = value);
                   _calculate();
                 },
+                activeColor: theme.colorScheme.primary,
               ),
+              onTap: () {
+                 setState(() => _isSpoteExterne = !_isSpoteExterne);
+                 _calculate();
+              },
             ),
           ],
         ),
@@ -406,6 +405,16 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller, {FocusNode? focusNode, IconData? icon, bool readOnly = false}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    Color fillColor;
+    if (readOnly) {
+      fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+    } else {
+      fillColor = isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.3) : Colors.white;
+    }
+
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
@@ -415,8 +424,8 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
         prefixIcon: icon != null ? Icon(icon) : null,
         border: const OutlineInputBorder(),
         isDense: true,
-        fillColor: readOnly ? Colors.grey.shade300 : null,
-        filled: readOnly,
+        fillColor: fillColor,
+        filled: true,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
