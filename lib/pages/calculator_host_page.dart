@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:ideal_calcule/class/etiquette.dart';
 import 'package:ideal_calcule/class/mother_reel_data.dart';
 import 'package:ideal_calcule/main.dart';
+import 'package:ideal_calcule/theme/app_colors.dart';
+import 'package:ideal_calcule/widgets/font_size_dialog.dart';
 import './calcul_metrage_page.dart';
 import './calcul_prix_page.dart';
 import './calcul_coupe_page.dart';
@@ -275,37 +277,67 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ideal Calcule'),
-        actions: [
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: themeNotifier,
-            builder: (context, mode, _) {
-              return IconButton(
-                icon: Icon(mode == ThemeMode.dark
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-                onPressed: () {
-                  themeNotifier.value =
-                      mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-                },
-              );
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight + 48),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isDark
+                ? AppColors.darkPrimaryGradient
+                : AppColors.lightPrimaryGradient,
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(icon: Icon(Icons.straighten), text: 'Métrage'),
-            Tab(icon: Icon(Icons.calculate), text: 'Prix'),
-            Tab(icon: Icon(Icons.content_cut), text: 'Coupe'),
-            Tab(icon: Icon(Icons.flip_to_front), text: 'Sleeve'),
-            Tab(icon: Icon(Icons.construction), text: 'Pièce'),
-          ],
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Ideal Calcule'),
+            actions: [
+              // Font size button
+              IconButton(
+                icon: const Icon(Icons.text_fields),
+                tooltip: 'Taille de police',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const FontSizeDialog(),
+                  );
+                },
+              ),
+              // Theme toggle button
+              ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeNotifier,
+                builder: (context, mode, _) {
+                  return IconButton(
+                    icon: Icon(mode == ThemeMode.dark
+                        ? Icons.light_mode
+                        : Icons.dark_mode),
+                    tooltip:
+                        mode == ThemeMode.dark ? 'Mode clair' : 'Mode sombre',
+                    onPressed: () {
+                      themeNotifier.value = mode == ThemeMode.dark
+                          ? ThemeMode.light
+                          : ThemeMode.dark;
+                    },
+                  );
+                },
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              indicatorWeight: 3,
+              tabs: const [
+                Tab(icon: Icon(Icons.straighten), text: 'Métrage'),
+                Tab(icon: Icon(Icons.calculate), text: 'Prix'),
+                Tab(icon: Icon(Icons.content_cut), text: 'Coupe'),
+                Tab(icon: Icon(Icons.flip_to_front), text: 'Sleeve'),
+                Tab(icon: Icon(Icons.construction), text: 'Pièce'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
