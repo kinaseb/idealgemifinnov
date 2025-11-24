@@ -5,7 +5,7 @@ class AppColors {
   // Light theme colors
   static const lightPrimaryStart = Color(0xFF667eea);
   static const lightPrimaryEnd = Color(0xFF764ba2);
-  static const lightSecondaryStart = Color(0xFF00d2ff);
+  static const lightSecondaryStart = Color(0xFF764ba2);
   static const lightSecondaryEnd = Color(0xFF3a7bd5);
   static const lightSurface = Color(0xFFFFFFFF);
   static const lightBackground = Color(0xFFF8F9FA);
@@ -22,19 +22,19 @@ class AppColors {
 
   // Gradients
   static const lightPrimaryGradient = LinearGradient(
-    colors: [lightPrimaryStart, lightPrimaryEnd],
+    colors: [darkPrimaryStart, darkPrimaryStart],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const lightSecondaryGradient = LinearGradient(
-    colors: [lightSecondaryStart, lightSecondaryEnd],
+    colors: [lightSecondaryStart, lightSecondaryStart],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const darkPrimaryGradient = LinearGradient(
-    colors: [darkPrimaryStart, darkPrimaryEnd],
+    colors: [lightSecondaryStart, darkPrimaryEnd],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
