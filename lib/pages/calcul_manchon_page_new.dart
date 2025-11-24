@@ -17,8 +17,13 @@ const String _kGbKey = 'gb_param';
 const String _kSpoteKey = 'spote_param';
 
 const _defaultTechParams = {
-  _kLcKey: "5", _kSccKey: "1", _kScdKey: "3",
-  _kScgKey: "3", _kRetractKey: "10", _kGbKey: "2", _kSpoteKey: "3",
+  _kLcKey: "5",
+  _kSccKey: "1",
+  _kScdKey: "3",
+  _kScgKey: "3",
+  _kRetractKey: "10",
+  _kGbKey: "2",
+  _kSpoteKey: "3",
 };
 
 class CalculManchonPage extends StatefulWidget {
@@ -74,8 +79,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
       _gbController: _onInputChanged,
       _spoteController: _onInputChanged,
     };
-    allControllers.forEach((controller, listener) => controller.addListener(listener));
-    
+    allControllers
+        .forEach((controller, listener) => controller.addListener(listener));
+
     // Add listeners to focus nodes
     final allFocusNodes = {
       _dFocusNode: _LastEdited.d,
@@ -84,33 +90,53 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
       _largEtuitFocusNode: _LastEdited.largEtuit,
     };
     allFocusNodes.forEach((node, field) => node.addListener(() {
-      if (node.hasFocus) setState(() => _lastEdited = field);
-    }));
+          if (node.hasFocus) setState(() => _lastEdited = field);
+        }));
   }
 
   @override
   void dispose() {
     // Dispose all controllers and focus nodes
-    [
-      _dController, _perimetreController, _largSleeveController, _largEtuitController,
-      _lcController, _sccController, _retractController, _scdController,
-      _scgController, _gbController, _spoteController,
-      _dFocusNode, _perimetreFocusNode, _largSleeveFocusNode, _largEtuitFocusNode
-    ].forEach((disposable) => disposable.dispose());
+    for (var disposable in [
+      _dController,
+      _perimetreController,
+      _largSleeveController,
+      _largEtuitController,
+      _lcController,
+      _sccController,
+      _retractController,
+      _scdController,
+      _scgController,
+      _gbController,
+      _spoteController,
+      _dFocusNode,
+      _perimetreFocusNode,
+      _largSleeveFocusNode,
+      _largEtuitFocusNode
+    ]) {
+      disposable.dispose();
+    }
     super.dispose();
   }
-  
+
   // --- Data Persistence ---
   Future<void> _loadTechnicalParams() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _lcController.text = prefs.getString(_kLcKey) ?? _defaultTechParams[_kLcKey]!;
-      _sccController.text = prefs.getString(_kSccKey) ?? _defaultTechParams[_kSccKey]!;
-      _scdController.text = prefs.getString(_kScdKey) ?? _defaultTechParams[_kScdKey]!;
-      _scgController.text = prefs.getString(_kScgKey) ?? _defaultTechParams[_kScgKey]!;
-      _retractController.text = prefs.getString(_kRetractKey) ?? _defaultTechParams[_kRetractKey]!;
-      _gbController.text = prefs.getString(_kGbKey) ?? _defaultTechParams[_kGbKey]!;
-      _spoteController.text = prefs.getString(_kSpoteKey) ?? _defaultTechParams[_kSpoteKey]!;
+      _lcController.text =
+          prefs.getString(_kLcKey) ?? _defaultTechParams[_kLcKey]!;
+      _sccController.text =
+          prefs.getString(_kSccKey) ?? _defaultTechParams[_kSccKey]!;
+      _scdController.text =
+          prefs.getString(_kScdKey) ?? _defaultTechParams[_kScdKey]!;
+      _scgController.text =
+          prefs.getString(_kScgKey) ?? _defaultTechParams[_kScgKey]!;
+      _retractController.text =
+          prefs.getString(_kRetractKey) ?? _defaultTechParams[_kRetractKey]!;
+      _gbController.text =
+          prefs.getString(_kGbKey) ?? _defaultTechParams[_kGbKey]!;
+      _spoteController.text =
+          prefs.getString(_kSpoteKey) ?? _defaultTechParams[_kSpoteKey]!;
     });
     _calculate();
   }
@@ -124,7 +150,7 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
     await prefs.setString(_kRetractKey, _retractController.text);
     await prefs.setString(_kGbKey, _gbController.text);
     await prefs.setString(_kSpoteKey, _spoteController.text);
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Paramètres sauvegardés !'),
@@ -132,18 +158,32 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
       ));
     }
   }
-  
+
   Future<void> _resetTechnicalParams() async {
     setState(() {
       _defaultTechParams.forEach((key, value) {
         switch (key) {
-          case _kLcKey: _lcController.text = value; break;
-          case _kSccKey: _sccController.text = value; break;
-          case _kScdKey: _scdController.text = value; break;
-          case _kScgKey: _scgController.text = value; break;
-          case _kRetractKey: _retractController.text = value; break;
-          case _kGbKey: _gbController.text = value; break;
-          case _kSpoteKey: _spoteController.text = value; break;
+          case _kLcKey:
+            _lcController.text = value;
+            break;
+          case _kSccKey:
+            _sccController.text = value;
+            break;
+          case _kScdKey:
+            _scdController.text = value;
+            break;
+          case _kScgKey:
+            _scgController.text = value;
+            break;
+          case _kRetractKey:
+            _retractController.text = value;
+            break;
+          case _kGbKey:
+            _gbController.text = value;
+            break;
+          case _kSpoteKey:
+            _spoteController.text = value;
+            break;
         }
       });
     });
@@ -164,7 +204,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
 
   void _updateTextField(TextEditingController controller, double value) {
     final roundedValue = value.round();
-    final formattedValue = (roundedValue > 0 && value.isFinite) ? _numberFormat.format(roundedValue) : '';
+    final formattedValue = (roundedValue > 0 && value.isFinite)
+        ? _numberFormat.format(roundedValue)
+        : '';
     if (controller.text != formattedValue) {
       controller.text = formattedValue;
     }
@@ -175,12 +217,17 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
     _isCalculating = true;
 
     final lc = double.tryParse(_lcController.text.replaceAll(',', '.')) ?? 0.0;
-    final scc = double.tryParse(_sccController.text.replaceAll(',', '.')) ?? 0.0;
-    final scd = double.tryParse(_scdController.text.replaceAll(',', '.')) ?? 0.0;
-    final scg = double.tryParse(_scgController.text.replaceAll(',', '.')) ?? 0.0;
-    final retract = double.tryParse(_retractController.text.replaceAll(',', '.')) ?? 0.0;
+    final scc =
+        double.tryParse(_sccController.text.replaceAll(',', '.')) ?? 0.0;
+    final scd =
+        double.tryParse(_scdController.text.replaceAll(',', '.')) ?? 0.0;
+    final scg =
+        double.tryParse(_scgController.text.replaceAll(',', '.')) ?? 0.0;
+    final retract =
+        double.tryParse(_retractController.text.replaceAll(',', '.')) ?? 0.0;
     final gb = double.tryParse(_gbController.text.replaceAll(',', '.')) ?? 0.0;
-    final spote = double.tryParse(_spoteController.text.replaceAll(',', '.')) ?? 0.0;
+    final spote =
+        double.tryParse(_spoteController.text.replaceAll(',', '.')) ?? 0.0;
 
     double d = 0, perimetre = 0, largSleeve = 0, largEtuit = 0;
     final part2 = lc + scc;
@@ -198,7 +245,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
         }
         break;
       case _LastEdited.perimetre:
-        perimetre = double.tryParse(_perimetreController.text.replaceAll(',', '.')) ?? 0.0;
+        perimetre =
+            double.tryParse(_perimetreController.text.replaceAll(',', '.')) ??
+                0.0;
         if (perimetre > 0) {
           d = perimetre / pi;
           largSleeve = perimetre + part2 + retract;
@@ -209,7 +258,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
         }
         break;
       case _LastEdited.largSleeve:
-        largSleeve = double.tryParse(_largSleeveController.text.replaceAll(',', '.')) ?? 0.0;
+        largSleeve =
+            double.tryParse(_largSleeveController.text.replaceAll(',', '.')) ??
+                0.0;
         if (largSleeve > part2 + retract) {
           perimetre = largSleeve - part2 - retract;
           d = perimetre / pi;
@@ -220,7 +271,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
         }
         break;
       case _LastEdited.largEtuit:
-        largEtuit = double.tryParse(_largEtuitController.text.replaceAll(',', '.')) ?? 0.0;
+        largEtuit =
+            double.tryParse(_largEtuitController.text.replaceAll(',', '.')) ??
+                0.0;
         if (largEtuit > 0) {
           largSleeve = (largEtuit * 2) + part2;
           if (largSleeve > part2 + retract) {
@@ -235,7 +288,8 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
     }
 
     final spoteValue = _isSpoteExterne ? spote : 0.0;
-    final newLaizeImpSleeve = largSleeve > 0 ? (largSleeve + scd + scg + (gb * 2) + spoteValue) : 0.0;
+    final newLaizeImpSleeve =
+        largSleeve > 0 ? (largSleeve + scd + scg + (gb * 2) + spoteValue) : 0.0;
 
     setState(() => _laizeImpSleeve = newLaizeImpSleeve);
     WidgetsBinding.instance.addPostFrameCallback((_) => _isCalculating = false);
@@ -267,14 +321,19 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
   Widget _buildTechniqueParamsCard() {
     final fields = [
       _buildTextField('Collage', _lcController, icon: Icons.layers_outlined),
-      _buildTextField('Contre collage', _sccController, icon: Icons.security_outlined),
-      _buildTextField('Securite droite', _scdController, icon: Icons.arrow_forward_outlined),
-      _buildTextField('Securite gauche', _scgController, icon: Icons.arrow_back_outlined),
-      _buildTextField('Rétraction', _retractController, icon: Icons.compress_outlined),
-      _buildTextField('Guide bande', _gbController, icon: Icons.compare_arrows_outlined),
+      _buildTextField('Contre collage', _sccController,
+          icon: Icons.security_outlined),
+      _buildTextField('Securite droite', _scdController,
+          icon: Icons.arrow_forward_outlined),
+      _buildTextField('Securite gauche', _scgController,
+          icon: Icons.arrow_back_outlined),
+      _buildTextField('Rétraction', _retractController,
+          icon: Icons.compress_outlined),
+      _buildTextField('Guide bande', _gbController,
+          icon: Icons.compare_arrows_outlined),
       _buildTextField('Spote', _spoteController, icon: Icons.adjust_outlined),
     ];
-    
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -332,23 +391,34 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Calculateur Principal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text("Calculateur Principal",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.5) : Colors.grey.shade100,
+                color: isDark
+                    ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5)
+                    : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  _buildTextField('Diamètre de la Forme (D)', _dController, focusNode: _dFocusNode, icon: Icons.circle_outlined),
+                  _buildTextField('Diamètre de la Forme (D)', _dController,
+                      focusNode: _dFocusNode, icon: Icons.circle_outlined),
                   const SizedBox(height: 10),
-                  _buildTextField('Périmètre de la forme', _perimetreController, focusNode: _perimetreFocusNode, icon: Icons.donut_large_outlined),
+                  _buildTextField('Périmètre de la forme', _perimetreController,
+                      focusNode: _perimetreFocusNode,
+                      icon: Icons.donut_large_outlined),
                   const SizedBox(height: 10),
-                  _buildTextField('Largeur avant manchon', _largSleeveController, focusNode: _largSleeveFocusNode, icon: Icons.unfold_more_outlined),
+                  _buildTextField(
+                      'Largeur avant manchon', _largSleeveController,
+                      focusNode: _largSleeveFocusNode,
+                      icon: Icons.unfold_more_outlined),
                   const SizedBox(height: 10),
-                  _buildTextField('Largeur Etuit', _largEtuitController, focusNode: _largEtuitFocusNode, icon: Icons.unfold_less_outlined),
+                  _buildTextField('Largeur Etuit', _largEtuitController,
+                      focusNode: _largEtuitFocusNode,
+                      icon: Icons.unfold_less_outlined),
                 ],
               ),
             ),
@@ -361,11 +431,11 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
                   setState(() => _isSpoteExterne = value);
                   _calculate();
                 },
-                activeColor: theme.colorScheme.primary,
+                activeThumbColor: theme.colorScheme.primary,
               ),
               onTap: () {
-                 setState(() => _isSpoteExterne = !_isSpoteExterne);
-                 _calculate();
+                setState(() => _isSpoteExterne = !_isSpoteExterne);
+                _calculate();
               },
             ),
           ],
@@ -383,19 +453,25 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
 
     return Card(
       elevation: 4,
-      color: isDark ? colorScheme.secondaryContainer : colorScheme.primaryContainer,
+      color: isDark
+          ? colorScheme.secondaryContainer
+          : colorScheme.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(resultLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(resultLabel,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
             Text(
               '${_numberFormat.format(_laizeImpSleeve.round())} mm',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimaryContainer,
+                color: isDark
+                    ? colorScheme.onSecondaryContainer
+                    : colorScheme.onPrimaryContainer,
               ),
             ),
           ],
@@ -404,7 +480,8 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {FocusNode? focusNode, IconData? icon, bool readOnly = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {FocusNode? focusNode, IconData? icon, bool readOnly = false}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -412,7 +489,9 @@ class _CalculManchonPageState extends State<CalculManchonPage> {
     if (readOnly) {
       fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
     } else {
-      fillColor = isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.3) : Colors.white;
+      fillColor = isDark
+          ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
+          : Colors.white;
     }
 
     return TextFormField(
