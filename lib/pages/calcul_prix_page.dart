@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ideal_calcule/class/etiquette.dart';
+import '../class/support.dart';
+import '../services/database_helper.dart';
 
-class CalculPrixPage extends StatelessWidget {
+class CalculPrixPage extends StatefulWidget {
   final TextEditingController txtLzBobM;
   final TextEditingController txtLzBobFille;
   final TextEditingController txtPrixSupport;
@@ -43,6 +45,27 @@ class CalculPrixPage extends StatelessWidget {
   });
 
   @override
+  State<CalculPrixPage> createState() => _CalculPrixPageState();
+}
+
+class _CalculPrixPageState extends State<CalculPrixPage> {
+  List<Support> _supports = [];
+  Support? _selectedSupport;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSupports();
+  }
+
+  Future<void> _loadSupports() async {
+    final data = await DatabaseHelper().getSupports();
+    setState(() {
+      _supports = data.map((e) => Support.fromMap(e)).toList();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
@@ -52,11 +75,60 @@ class CalculPrixPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Support Selection and Price
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<Support>(
+                      value: _selectedSupport,
+                      decoration: const InputDecoration(
+                        labelText: 'Choisir Support',
+                        prefixIcon: Icon(Icons.category),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _supports.map((Support support) {
+                        return DropdownMenuItem<Support>(
+                          value: support,
+                          child: Text(support.name),
+                        );
+                      }).toList(),
+                      onChanged: (Support? newValue) {
+                        setState(() {
+                          _selectedSupport = newValue;
+                          if (newValue != null) {
+                            widget.txtPrixSupport.text =
+                                newValue.currentPrice.toString();
+                            // Trigger recalculation if needed, but the controller listener in parent should handle it
+                            // However, setting text programmatically doesn't always trigger listeners?
+                            // Actually it does NOT trigger 'addListener' callbacks usually?
+                            // Wait, TextEditingController.text = ... DOES trigger notifyListeners.
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 1,
+                    child: TextFormField(
+                      controller: widget.txtPrixSupport,
+                      decoration: const InputDecoration(
+                        labelText: 'Prix Support (DA)',
+                        prefixIcon: Icon(Icons.attach_money),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: txtLzBobFille,
+                      controller: widget.txtLzBobFille,
                       decoration: const InputDecoration(
                         labelText: 'Laize Fille (mm)',
                         prefixIcon: Icon(Icons.arrow_right_alt),
@@ -68,7 +140,7 @@ class CalculPrixPage extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextFormField(
-                      controller: txtLzBobM,
+                      controller: widget.txtLzBobM,
                       decoration: const InputDecoration(
                         labelText: 'Laize Mère (mm)',
                         prefixIcon: Icon(Icons.line_weight),
@@ -83,12 +155,20 @@ class CalculPrixPage extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                      child: _buildInfoCard(context, 'Bobines Filles',
-                          '$nbrbobf', Icons.copy, Colors.blue.shade50)),
+                      child: _buildInfoCard(
+                          context,
+                          'Bobines Filles',
+                          '${widget.nbrbobf}',
+                          Icons.copy,
+                          Colors.blue.shade50)),
                   const SizedBox(width: 10),
                   Expanded(
-                      child: _buildInfoCard(context, 'Chute',
-                          '$chutteBobMere mm', Icons.cut, Colors.orange.shade50,
+                      child: _buildInfoCard(
+                          context,
+                          'Chute',
+                          '${widget.chutteBobMere} mm',
+                          Icons.cut,
+                          Colors.orange.shade50,
                           textColor: Colors.red)),
                 ],
               ),
@@ -96,34 +176,39 @@ class CalculPrixPage extends StatelessWidget {
               _buildInfoCard(
                   context,
                   'Étiquettes / Bobine Mère',
-                  formatnumeromillier.format(etiqbobMere),
+                  widget.formatnumeromillier.format(widget.etiqbobMere),
                   Icons.layers,
                   Colors.purple.shade50),
               const SizedBox(height: 10),
               _buildInfoCard(
                   context,
                   'Étiquettes / Bobine Fille',
-                  formatnumeromillier.format(etiqbobFille),
+                  widget.formatnumeromillier.format(widget.etiqbobFille),
                   Icons.layers_outlined,
                   Colors.purple.shade50),
               const Divider(height: 30, thickness: 1),
               Row(
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: txtLzBobFille,
+                    child: DropdownButtonFormField<String>(
+                      value: widget.choixInclureChute,
                       decoration: const InputDecoration(
-                        labelText: 'Laize Bobine Fille (mm)',
-                        prefixIcon: Icon(Icons.straighten),
+                        labelText: 'Inclure la chute',
+                        prefixIcon: Icon(Icons.delete_outline),
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
+                      items:
+                          Etiquette.includeWasteOptions.map((String inclure) {
+                        return DropdownMenuItem<String>(
+                            value: inclure, child: Text(inclure));
+                      }).toList(),
+                      onChanged: widget.onInclureChuteChanged,
                     ),
                   ),
-                  if (onTransferToCoupe != null) ...[
+                  if (widget.onTransferToCoupe != null) ...[
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: onTransferToCoupe,
+                      onPressed: widget.onTransferToCoupe,
                       icon: const Icon(Icons.content_cut),
                       tooltip: "Transférer vers Coupe",
                       style: IconButton.styleFrom(
@@ -134,25 +219,11 @@ class CalculPrixPage extends StatelessWidget {
                   ],
                 ],
               ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                initialValue: choixInclureChute,
-                decoration: const InputDecoration(
-                  labelText: 'Inclure la chute',
-                  prefixIcon: Icon(Icons.delete_outline),
-                  border: OutlineInputBorder(),
-                ),
-                items: Etiquette.includeWasteOptions.map((String inclure) {
-                  return DropdownMenuItem<String>(
-                      value: inclure, child: Text(inclure));
-                }).toList(),
-                onChanged: onInclureChuteChanged,
-              ),
               const SizedBox(height: 16),
               _buildInfoCard(
                 context,
                 'Prix de revient / étiquette',
-                '${formatnumeromillier.format(prixrevienEtiquetteTTC)} DA',
+                '${widget.formatnumeromillier.format(widget.prixrevienEtiquetteTTC)} DA',
                 Icons.monetization_on_outlined,
                 Colors.green.shade50,
                 textColor: Colors.green.shade800,
@@ -162,27 +233,27 @@ class CalculPrixPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: txtCoeficient,
+                      controller: widget.txtCoeficient,
                       decoration: const InputDecoration(
                         labelText: 'Coefficient',
                         prefixIcon: Icon(Icons.trending_up),
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
-                      onChanged: (_) => onCoefChanged(),
+                      onChanged: (_) => widget.onCoefChanged(),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextFormField(
-                      controller: txtPrixTTC,
+                      controller: widget.txtPrixTTC,
                       decoration: const InputDecoration(
                         labelText: 'Prix Vente TTC',
                         prefixIcon: Icon(Icons.price_check),
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
-                      onChanged: (_) => onPrixTTCChanged(),
+                      onChanged: (_) => widget.onPrixTTCChanged(),
                     ),
                   ),
                 ],
@@ -191,7 +262,7 @@ class CalculPrixPage extends StatelessWidget {
               _buildInfoCard(
                 context,
                 'Prix de vente HT',
-                '${txtPrixHT.text} DA',
+                '${widget.txtPrixHT.text} DA',
                 Icons.money_off,
                 Colors.grey.shade200,
               ),

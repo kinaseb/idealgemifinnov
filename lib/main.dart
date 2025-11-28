@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:ideal_calcule/pages/calculator_host_page.dart';
 import 'package:ideal_calcule/class/font_size_provider.dart';
 import 'package:ideal_calcule/theme/app_theme.dart';
-
-// Global notifier for theme switching
-final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+import 'package:ideal_calcule/services/database_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database
+  try {
+    await DatabaseHelper().database;
+    print('✅ Base de données initialisée avec succès');
+  } catch (e) {
+    print('❌ Erreur initialisation base de données: $e');
+  }
 
   // Load saved font size
   final savedFontSize = await FontSizeProvider.loadFontSize();
@@ -18,6 +24,10 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  // Global notifier for theme switching
+  static final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.light);
 
   @override
   Widget build(BuildContext context) {

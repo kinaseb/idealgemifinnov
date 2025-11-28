@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ideal_calcule/main.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ideal_calcule/class/etiquette.dart';
 import 'package:ideal_calcule/class/mother_reel_data.dart';
 import 'package:ideal_calcule/main.dart';
@@ -10,6 +12,8 @@ import './calcul_prix_page.dart';
 import './calcul_coupe_page.dart';
 import './calcul_piece_page.dart';
 import './calcul_manchon_page.dart';
+import './clients_page.dart';
+import './supports_page.dart';
 
 class CalculatorHostPage extends StatefulWidget {
   const CalculatorHostPage({super.key});
@@ -280,64 +284,123 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 48),
-        child: Container(
+      appBar: AppBar(
+        title: Text('Calculateur Flexo', style: GoogleFonts.lato()),
+        centerTitle: true,
+        flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: isDark
                 ? AppColors.darkPrimaryGradient
                 : AppColors.lightPrimaryGradient,
           ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: const Text('Ideal Calcule'),
-            actions: [
-              // Font size button
-              IconButton(
-                icon: const Icon(Icons.text_fields),
-                tooltip: 'Taille de police',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.text_fields),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const FontSizeDialog(),
+              );
+            },
+          ),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: MyApp.themeNotifier,
+            builder: (context, currentMode, child) {
+              return IconButton(
+                icon: Icon(
+                  currentMode == ThemeMode.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                ),
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => const FontSizeDialog(),
-                  );
+                  MyApp.themeNotifier.value = currentMode == ThemeMode.dark
+                      ? ThemeMode.light
+                      : ThemeMode.dark;
                 },
-              ),
-              // Theme toggle button
-              ValueListenableBuilder<ThemeMode>(
-                valueListenable: themeNotifier,
-                builder: (context, mode, _) {
-                  return IconButton(
-                    icon: Icon(mode == ThemeMode.dark
-                        ? Icons.light_mode
-                        : Icons.dark_mode),
-                    tooltip:
-                        mode == ThemeMode.dark ? 'Mode clair' : 'Mode sombre',
-                    onPressed: () {
-                      themeNotifier.value = mode == ThemeMode.dark
-                          ? ThemeMode.light
-                          : ThemeMode.dark;
-                    },
-                  );
-                },
-              ),
-            ],
-            bottom: TabBar(
+              );
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Container(
+            color: isDark ? Colors.black26 : Colors.white24,
+            child: TabBar(
               controller: _tabController,
+              isScrollable: true,
+              indicatorColor: AppColors.accent,
+              indicatorWeight: 4,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
+              labelStyle:
+                  GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.bold),
               tabs: const [
-                Tab(icon: Icon(Icons.straighten), text: 'Métrage'),
-                Tab(icon: Icon(Icons.calculate), text: 'Prix'),
-                Tab(icon: Icon(Icons.content_cut), text: 'Coupe'),
-                Tab(icon: Icon(Icons.flip_to_front), text: 'Sleeve'),
-                Tab(icon: Icon(Icons.construction), text: 'Pièce'),
+                Tab(text: 'Métrage'),
+                Tab(text: 'Prix'),
+                Tab(text: 'Coupe'),
+                Tab(text: 'Pièce'),
+                Tab(text: 'Manchon'),
               ],
             ),
           ),
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: isDark
+                    ? AppColors.darkPrimaryGradient
+                    : AppColors.lightPrimaryGradient,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 30,
+                    child: Icon(Icons.calculate,
+                        size: 35, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Ideal Calcule',
+                    style: GoogleFonts.lato(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text('Clients'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ClientsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.inventory),
+              title: const Text('Supports (Matières)'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SupportsPage()),
+                );
+              },
+            ),
+          ],
         ),
       ),
       body: TabBarView(
@@ -390,8 +453,8 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
             onTransferToCoupe: _transferToCoupe,
           ),
           CalculCoupePage(motherReels: _motherReels),
-          const CalculManchonPage(),
           const CalculPiecePage(),
+          const CalculManchonPage(),
         ],
       ),
     );
