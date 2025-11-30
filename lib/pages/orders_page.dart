@@ -10,6 +10,8 @@ import '../class/etiquette.dart';
 import '../class/employee.dart';
 import '../pages/employees_page.dart';
 import '../widgets/image_zoom_dialog.dart';
+import '../widgets/responsive_layout.dart';
+import '../widgets/modern_card.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -54,181 +56,6 @@ class _OrdersPageState extends State<OrdersPage>
     _tabController = TabController(length: 4, vsync: this);
     _loadInitialData();
     _quantityController.addListener(_calculateMetrage);
-  }
-
-  // ... (dispose remains same)
-
-  // ... (other methods remain same)
-
-  Widget _buildDesktopLayout() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 350,
-          child: _buildFormPanel(),
-        ),
-        const VerticalDivider(width: 1),
-        Expanded(
-          child: DefaultTabController(
-            length: 3,
-            child: Column(
-              children: [
-                const TabBar(
-                  tabs: [
-                    Tab(text: 'Liste', icon: Icon(Icons.list)),
-                    Tab(text: 'Kanban', icon: Icon(Icons.view_kanban)),
-                    Tab(text: 'Pipeline', icon: Icon(Icons.view_timeline)),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildListPanel(),
-                      _buildKanbanView(),
-                      _buildPipelineView(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    return Column(
-      children: [
-        TabBar(
-          controller: _tabController,
-          labelColor: Theme.of(context).primaryColor,
-          tabs: const [
-            Tab(text: 'Nouveau', icon: Icon(Icons.add)),
-            Tab(text: 'Liste', icon: Icon(Icons.list)),
-            Tab(text: 'Kanban', icon: Icon(Icons.view_kanban)),
-            Tab(text: 'Pipeline', icon: Icon(Icons.view_timeline)),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildFormPanel(),
-              _buildListPanel(),
-              _buildKanbanView(),
-              _buildPipelineView(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPipelineView() {
-    final statuses = [
-      'En attente',
-      'Prepresse',
-      'Production',
-      'Finition',
-      'Stock',
-      'Livraison'
-    ];
-
-    return DefaultTabController(
-      length: statuses.length,
-      child: Column(
-        children: [
-          Container(
-            color: Colors.grey.shade100,
-            child: TabBar(
-              isScrollable: true,
-              labelColor: Theme.of(context).primaryColor,
-              unselectedLabelColor: Colors.grey,
-              tabs: statuses.map((s) => Tab(text: s)).toList(),
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: statuses.map((status) {
-                final ordersInStatus = _filteredOrders
-                    .where((o) => (o['status'] ?? 'En attente') == status)
-                    .toList();
-                return _buildPipelineList(status, ordersInStatus, statuses);
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPipelineList(String currentStatus,
-      List<Map<String, dynamic>> orders, List<String> allStatuses) {
-    if (orders.isEmpty) {
-      return const Center(
-        child: Text('Aucune commande dans ce statut',
-            style: TextStyle(color: Colors.grey)),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        final clientName = order['clients']?['name'] ?? 'Inconnu';
-        final articleName = order['articles']?['name'] ?? 'Inconnu';
-        final currentIndex = allStatuses.indexOf(currentStatus);
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(articleName,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(
-                        DateFormat('dd/MM')
-                            .format(DateTime.parse(order['date'])),
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
-                ),
-                Text(clientName, style: const TextStyle(color: Colors.grey)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Chip(label: Text('${order['quantity']} ex')),
-                    const Spacer(),
-                    if (currentIndex > 0)
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => _updateOrderStatus(
-                            order['id'], allStatuses[currentIndex - 1]),
-                        tooltip: 'Statut précédent',
-                      ),
-                    if (currentIndex < allStatuses.length - 1)
-                      IconButton.filled(
-                        icon: const Icon(Icons.arrow_forward),
-                        onPressed: () => _updateOrderStatus(
-                            order['id'], allStatuses[currentIndex + 1]),
-                        tooltip: 'Statut suivant',
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -417,6 +244,59 @@ Métrage estimé: ${_calculatedMetrage.toStringAsFixed(2)} m
     }
   }
 
+  Future<int?> _selectEmployee() async {
+    final employees = await SupabaseService().getEmployees();
+    if (employees.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Aucun employé trouvé. Veuillez en créer un.')),
+        );
+      }
+      return null;
+    }
+
+    final employeeList = employees.map((e) => Employee.fromMap(e)).toList();
+
+    if (!mounted) return null;
+
+    return await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Qui effectue cette action ?'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: employeeList.length,
+            itemBuilder: (context, index) {
+              final employee = employeeList[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: employee.photoUrl != null
+                      ? NetworkImage(employee.photoUrl!)
+                      : null,
+                  child: employee.photoUrl == null
+                      ? Text(employee.firstName[0])
+                      : null,
+                ),
+                title: Text(employee.fullName),
+                subtitle: Text(employee.jobTitle ?? ''),
+                onTap: () => Navigator.pop(context, employee.id),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _updateOrderStatus(int id, String newStatus) async {
     final index = _orders.indexWhere((o) => o['id'] == id);
     if (index == -1) return;
@@ -517,8 +397,6 @@ Métrage estimé: ${_calculatedMetrage.toStringAsFixed(2)} m
       debugPrint('Error updating quantity: $e');
     }
   }
-
-  // --- Orders V3 Features ---
 
   void _showOrderPreview(Map<String, dynamic> order) {
     final client = Client.fromSupabaseMap(order['clients']);
@@ -943,17 +821,187 @@ Poses: ${article.poseCount}
     });
   }
 
+  void _showOrderHistory(int orderId) async {
+    final history = await SupabaseService().getOrderHistory(orderId);
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Historique de la commande'),
+        content: SizedBox(
+          width: 600,
+          child: SingleChildScrollView(
+            child: DataTable(
+              columns: const [
+                DataColumn(label: Text('Date')),
+                DataColumn(label: Text('Heure')),
+                DataColumn(label: Text('De')),
+                DataColumn(label: Text('Vers')),
+                DataColumn(label: Text('Employé')),
+              ],
+              rows: history.map((h) {
+                final date = DateTime.parse(h['timestamp']).toLocal();
+                final employee = h['employees'] != null
+                    ? Employee.fromMap(h['employees'])
+                    : null;
+                return DataRow(cells: [
+                  DataCell(Text(DateFormat('dd/MM/yyyy').format(date))),
+                  DataCell(Text(DateFormat('HH:mm').format(date))),
+                  DataCell(Text(h['from_status'] ?? '-')),
+                  DataCell(Text(h['to_status'] ?? '-')),
+                  DataCell(Row(
+                    children: [
+                      if (employee?.photoUrl != null)
+                        CircleAvatar(
+                          radius: 10,
+                          backgroundImage: NetworkImage(employee!.photoUrl!),
+                        ),
+                      const SizedBox(width: 8),
+                      Text(employee?.fullName ?? 'Inconnu'),
+                    ],
+                  )),
+                ]);
+              }).toList(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 900) {
-            return _buildDesktopLayout();
-          } else {
-            return _buildMobileLayout();
-          }
-        },
+      body: ResponsiveLayout(
+        mobile: _buildMobileLayout(),
+        tablet: _buildTabletLayout(),
+        desktop: _buildDesktopLayout(),
+      ),
+      floatingActionButton: ResponsiveLayout.isMobile(context)
+          ? FloatingActionButton(
+              onPressed: () {
+                _tabController.animateTo(0); // Go to 'Nouveau' tab
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(width: 400, child: _buildFormPanel()),
+        Expanded(
+          child: Column(
+            children: [
+              _buildTabBar(isDesktop: true),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildKanbanView(),
+                    _buildPipelineView(),
+                    _buildListPanel(),
+                    const Center(child: Text('Statistiques (Bientôt)')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(width: 300, child: _buildFormPanel()),
+        Expanded(
+          child: Column(
+            children: [
+              _buildTabBar(isDesktop: false),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildKanbanView(),
+                    _buildPipelineView(),
+                    _buildListPanel(),
+                    const Center(child: Text('Statistiques (Bientôt)')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        _buildTabBar(isDesktop: false, isMobile: true),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildFormPanel(),
+              _buildKanbanView(),
+              _buildPipelineView(),
+              _buildListPanel(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabBar({bool isDesktop = false, bool isMobile = false}) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: Theme.of(context).primaryColor,
+        unselectedLabelColor: Colors.grey,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorColor: Theme.of(context).primaryColor,
+        tabs: isMobile
+            ? const [
+                Tab(text: 'Nouveau'),
+                Tab(text: 'Kanban'),
+                Tab(text: 'Pipeline'),
+                Tab(text: 'Liste'),
+              ]
+            : const [
+                Tab(text: 'Kanban'),
+                Tab(text: 'Pipeline'),
+                Tab(text: 'Liste'),
+                Tab(text: 'Statistiques'),
+              ],
       ),
     );
   }
@@ -1054,21 +1102,18 @@ Poses: ${article.poseCount}
 
             // Calculated Metrage
             if (_calculatedMetrage > 0)
-              Card(
-                color: Colors.blue.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text('Métrage Nécessaire',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('${_calculatedMetrage.toStringAsFixed(0)} m',
-                          style: const TextStyle(
-                              fontSize: 24, color: Colors.blue)),
-                      Text('Bobine Fille: ${_selectedArticle?.width} mm',
-                          style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
+              ModernCard(
+                backgroundColor: Colors.blue.shade50,
+                child: Column(
+                  children: [
+                    const Text('Métrage Nécessaire',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('${_calculatedMetrage.toStringAsFixed(0)} m',
+                        style:
+                            const TextStyle(fontSize: 24, color: Colors.blue)),
+                    Text('Bobine Fille: ${_selectedArticle?.width} mm',
+                        style: const TextStyle(fontSize: 12)),
+                  ],
                 ),
               ),
             const SizedBox(height: 24),
@@ -1133,7 +1178,8 @@ Poses: ${article.poseCount}
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: Card(
+            child: ModernCard(
+              padding: EdgeInsets.zero,
               child: DataTable2(
                 columnSpacing: 12,
                 horizontalMargin: 12,
@@ -1269,9 +1315,9 @@ Poses: ${article.poseCount}
       width: 280,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(25),
+        color: Theme.of(context).cardColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withAlpha(51)),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -1287,7 +1333,7 @@ Poses: ${article.poseCount}
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withAlpha(51),
+                    color: Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('${orders.length}',
@@ -1313,13 +1359,8 @@ Poses: ${article.poseCount}
                       data: order['id'],
                       feedback: SizedBox(
                         width: 260,
-                        child: Card(
-                          elevation: 6,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child:
-                                Text(order['articles']?['name'] ?? 'Article'),
-                          ),
+                        child: ModernCard(
+                          child: Text(order['articles']?['name'] ?? 'Article'),
                         ),
                       ),
                       childWhenDragging: Opacity(
@@ -1389,232 +1430,217 @@ Poses: ${article.poseCount}
         }
       },
       onDoubleTap: () => _showOrderPreview(order),
-      child: Card(
-        elevation: 2,
+      child: ModernCard(
         margin: const EdgeInsets.only(bottom: 8),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(order['clients']?['name'] ?? 'Client Inconnu',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                if (orderRef.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _showOrderHistory(order['id']),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(orderRef,
+                          style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue)),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(order['articles']?['name'] ?? 'Article Inconnu',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+
+            // Global Progress Indicator
+            if (orderRef.isNotEmpty) ...[
+              Builder(builder: (context) {
+                final related =
+                    _orders.where((o) => o['order_ref'] == orderRef).toList();
+                final totalDelivered = related
+                    .where((o) => o['status'] == 'Livraison')
+                    .fold(0, (sum, o) => sum + (o['quantity'] as int));
+                final initialQty = order['initial_quantity'] ?? 0;
+                final progress =
+                    initialQty > 0 ? totalDelivered / initialQty : 0.0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LinearProgressIndicator(
+                      value: progress.clamp(0.0, 1.0),
+                      backgroundColor: Colors.grey.shade200,
+                      color: Colors.green,
+                      minHeight: 4,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Reste: ${initialQty - totalDelivered} / $initialQty',
+                      style:
+                          TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                );
+              }),
+            ],
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (isStock)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          final currentQty = order['quantity'] as int;
+                          if (currentQty > 0) {
+                            _updateOrderQuantity(order['id'], currentQty - 1);
+                          }
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('${order['quantity']}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          final currentQty = order['quantity'] as int;
+                          _updateOrderQuantity(order['id'], currentQty + 1);
+                        },
+                      ),
+                    ],
+                  )
+                else
+                  Text('${order['quantity']} unités',
+                      style: const TextStyle(fontSize: 12)),
+                Text(DateFormat('dd/MM').format(DateTime.parse(order['date'])),
+                    style: const TextStyle(fontSize: 10)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPipelineView() {
+    final statuses = [
+      'En attente',
+      'Prepresse',
+      'Production',
+      'Finition',
+      'Stock',
+      'Livraison'
+    ];
+
+    return DefaultTabController(
+      length: statuses.length,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.grey.shade100,
+            child: TabBar(
+              isScrollable: true,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              tabs: statuses.map((s) => Tab(text: s)).toList(),
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: statuses.map((status) {
+                final ordersInStatus = _filteredOrders
+                    .where((o) => (o['status'] ?? 'En attente') == status)
+                    .toList();
+                return _buildPipelineList(status, ordersInStatus, statuses);
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPipelineList(String currentStatus,
+      List<Map<String, dynamic>> orders, List<String> allStatuses) {
+    if (orders.isEmpty) {
+      return const Center(
+        child: Text('Aucune commande dans ce statut',
+            style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: orders.length,
+      itemBuilder: (context, index) {
+        final order = orders[index];
+        final clientName = order['clients']?['name'] ?? 'Inconnu';
+        final articleName = order['articles']?['name'] ?? 'Inconnu';
+        final currentIndex = allStatuses.indexOf(currentStatus);
+
+        return ModernCard(
+          margin: const EdgeInsets.only(bottom: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(order['clients']?['name'] ?? 'Client Inconnu',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  if (orderRef.isNotEmpty)
-                    GestureDetector(
-                      onTap: () => _showOrderHistory(order['id']),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withAlpha(25),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(orderRef,
-                            style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue)),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(order['articles']?['name'] ?? 'Article Inconnu',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-
-              // Global Progress Indicator
-              if (orderRef.isNotEmpty) ...[
-                Builder(builder: (context) {
-                  final related =
-                      _orders.where((o) => o['order_ref'] == orderRef).toList();
-                  final totalDelivered = related
-                      .where((o) => o['status'] == 'Livraison')
-                      .fold(0, (sum, o) => sum + (o['quantity'] as int));
-                  final initialQty = order['initial_quantity'] ?? 0;
-                  final progress =
-                      initialQty > 0 ? totalDelivered / initialQty : 0.0;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LinearProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        backgroundColor: Colors.grey.shade200,
-                        color: Colors.green,
-                        minHeight: 4,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Reste: ${initialQty - totalDelivered} / $initialQty',
-                        style: TextStyle(
-                            fontSize: 10, color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  );
-                }),
-              ],
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (isStock)
-                    Row(
-                      children: [
-                        IconButton(
-                          icon:
-                              const Icon(Icons.remove_circle_outline, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {
-                            final currentQty = order['quantity'] as int;
-                            if (currentQty > 0) {
-                              _updateOrderQuantity(order['id'], currentQty - 1);
-                            }
-                          },
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text('${order['quantity']}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {
-                            final currentQty = order['quantity'] as int;
-                            _updateOrderQuantity(order['id'], currentQty + 1);
-                          },
-                        ),
-                      ],
-                    )
-                  else
-                    Text('${order['quantity']} unités',
-                        style: const TextStyle(fontSize: 12)),
+                  Text(articleName,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(
                       DateFormat('dd/MM').format(DateTime.parse(order['date'])),
-                      style: const TextStyle(fontSize: 10)),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+              Text(clientName, style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Chip(label: Text('${order['quantity']} ex')),
+                  const Spacer(),
+                  if (currentIndex > 0)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => _updateOrderStatus(
+                          order['id'], allStatuses[currentIndex - 1]),
+                      tooltip: 'Statut précédent',
+                    ),
+                  if (currentIndex < allStatuses.length - 1)
+                    IconButton.filled(
+                      icon: const Icon(Icons.arrow_forward),
+                      onPressed: () => _updateOrderStatus(
+                          order['id'], allStatuses[currentIndex + 1]),
+                      tooltip: 'Statut suivant',
+                    ),
                 ],
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<int?> _selectEmployee() async {
-    final employees = await SupabaseService().getEmployees();
-    if (employees.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Aucun employé trouvé. Veuillez en créer un.')),
         );
-      }
-      return null;
-    }
-
-    final employeeList = employees.map((e) => Employee.fromMap(e)).toList();
-
-    if (!mounted) return null;
-
-    return await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Qui effectue cette action ?'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: employeeList.length,
-            itemBuilder: (context, index) {
-              final employee = employeeList[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: employee.photoUrl != null
-                      ? NetworkImage(employee.photoUrl!)
-                      : null,
-                  child: employee.photoUrl == null
-                      ? Text(employee.firstName[0])
-                      : null,
-                ),
-                title: Text(employee.fullName),
-                subtitle: Text(employee.jobTitle ?? ''),
-                onTap: () => Navigator.pop(context, employee.id),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showOrderHistory(int orderId) async {
-    final history = await SupabaseService().getOrderHistory(orderId);
-
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Historique de la commande'),
-        content: SizedBox(
-          width: 600,
-          child: SingleChildScrollView(
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Date')),
-                DataColumn(label: Text('Heure')),
-                DataColumn(label: Text('De')),
-                DataColumn(label: Text('Vers')),
-                DataColumn(label: Text('Employé')),
-              ],
-              rows: history.map((h) {
-                final date = DateTime.parse(h['timestamp']).toLocal();
-                final employee = h['employees'] != null
-                    ? Employee.fromMap(h['employees'])
-                    : null;
-                return DataRow(cells: [
-                  DataCell(Text(DateFormat('dd/MM/yyyy').format(date))),
-                  DataCell(Text(DateFormat('HH:mm').format(date))),
-                  DataCell(Text(h['from_status'] ?? '-')),
-                  DataCell(Text(h['to_status'] ?? '-')),
-                  DataCell(Row(
-                    children: [
-                      if (employee?.photoUrl != null)
-                        CircleAvatar(
-                          radius: 10,
-                          backgroundImage: NetworkImage(employee!.photoUrl!),
-                        ),
-                      const SizedBox(width: 8),
-                      Text(employee?.fullName ?? 'Inconnu'),
-                    ],
-                  )),
-                ]);
-              }).toList(),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
+      },
     );
   }
 }
