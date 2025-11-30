@@ -47,8 +47,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onOpen: (db) async {
         // Activer les contraintes de clés étrangères
         await db.execute('PRAGMA foreign_keys = ON');
@@ -80,8 +81,20 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         clientId INTEGER,
         name TEXT,
-        dimensions TEXT,
+        photo TEXT,
+        type TEXT,
+        typeAutre TEXT,
         supportId INTEGER,
+        costPrice REAL,
+        repeat REAL,
+        poseCount INTEGER,
+        amalgam INTEGER,
+        width REAL,
+        machine TEXT,
+        colorCount INTEGER,
+        sleeveCase REAL,
+        labelsPerReel INTEGER,
+        core TEXT,
         FOREIGN KEY(clientId) REFERENCES clients(id) ON DELETE CASCADE,
         FOREIGN KEY(supportId) REFERENCES supports(id)
       )
@@ -97,6 +110,57 @@ class DatabaseHelper {
         FOREIGN KEY(supportId) REFERENCES supports(id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE machine_repeats(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        machine_name TEXT,
+        repeat_value REAL
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Migration from version 1 to 2
+      // Since we are in development and the table structure changed significantly,
+      // we will drop the old articles table and recreate it.
+      // In a production app, we would use ALTER TABLE to add columns.
+      await db.execute('DROP TABLE IF EXISTS articles');
+      await db.execute('''
+        CREATE TABLE articles(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          clientId INTEGER,
+          name TEXT,
+          photo TEXT,
+          type TEXT,
+          typeAutre TEXT,
+          supportId INTEGER,
+          costPrice REAL,
+          repeat REAL,
+          poseCount INTEGER,
+          amalgam INTEGER,
+          width REAL,
+          machine TEXT,
+          colorCount INTEGER,
+          sleeveCase REAL,
+          labelsPerReel INTEGER,
+          core TEXT,
+          FOREIGN KEY(clientId) REFERENCES clients(id) ON DELETE CASCADE,
+          FOREIGN KEY(supportId) REFERENCES supports(id)
+        )
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE machine_repeats(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          machine_name TEXT,
+          repeat_value REAL
+        )
+      ''');
+    }
   }
 
   // CRUD Operations
@@ -207,6 +271,17 @@ class DatabaseHelper {
     }
   }
 
+  Future<int> updateArticle(Map<String, dynamic> row) async {
+    try {
+      Database db = await database;
+      int id = row['id'];
+      return await db.update('articles', row, where: 'id = ?', whereArgs: [id]);
+    } catch (e) {
+      print('❌ Erreur mise à jour article: $e');
+      rethrow;
+    }
+  }
+
   Future<int> deleteArticle(int id) async {
     try {
       Database db = await database;
@@ -235,6 +310,40 @@ class DatabaseHelper {
           where: 'supportId = ?', whereArgs: [supportId], orderBy: 'date DESC');
     } catch (e) {
       print('❌ Erreur récupération historique prix: $e');
+      return [];
+    }
+  }
+
+  // Machine Repeats
+  Future<int> insertMachineRepeat(String machine, double repeat) async {
+    try {
+      Database db = await database;
+      // Check if exists
+      final existing = await db.query('machine_repeats',
+          where: 'machine_name = ? AND repeat_value = ?',
+          whereArgs: [machine, repeat]);
+      if (existing.isNotEmpty) return existing.first['id'] as int;
+
+      return await db.insert('machine_repeats', {
+        'machine_name': machine,
+        'repeat_value': repeat,
+      });
+    } catch (e) {
+      print('❌ Erreur insertion repeat machine: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<double>> getRepeatsForMachine(String machine) async {
+    try {
+      Database db = await database;
+      final result = await db.query('machine_repeats',
+          where: 'machine_name = ?',
+          whereArgs: [machine],
+          orderBy: 'repeat_value ASC');
+      return result.map((e) => (e['repeat_value'] as num).toDouble()).toList();
+    } catch (e) {
+      print('❌ Erreur récupération repeats machine: $e');
       return [];
     }
   }

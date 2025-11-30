@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ideal_calcule/class/etiquette.dart';
 import 'package:ideal_calcule/class/mother_reel_data.dart';
-import 'package:ideal_calcule/main.dart';
 import 'package:ideal_calcule/theme/app_colors.dart';
 import 'package:ideal_calcule/widgets/font_size_dialog.dart';
 import './calcul_metrage_page.dart';
@@ -14,6 +13,17 @@ import './calcul_piece_page.dart';
 import './calcul_manchon_page.dart';
 import './clients_page.dart';
 import './supports_page.dart';
+import 'stock/stock_dashboard_page.dart';
+import './orders_page.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../class/article.dart';
+import '../class/client.dart';
+import '../services/database_helper.dart';
+import '../services/data_migration_service.dart';
+import '../services/supabase_service.dart';
+import 'login_page.dart';
+import '../widgets/article_selection_dialog.dart';
 
 class CalculatorHostPage extends StatefulWidget {
   const CalculatorHostPage({super.key});
@@ -56,11 +66,12 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
 
   // State from CalculCoupePage
   final List<MotherReelData> _motherReels = [];
+  final GlobalKey<CalculCoupePageState> _coupeKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
 
     // Add listeners to recalculate everything when user types in these fields
     txtQtCommande.addListener(_recalculateAll);
@@ -74,6 +85,33 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
     if (_motherReels.isEmpty) {
       _motherReels.add(MotherReelData());
     }
+  }
+
+  // ... (lines 92-267 omitted for brevity, no changes needed there)
+
+  void _performTransfer(double laizeFille, {required bool overwrite}) {
+    setState(() {
+      if (overwrite) {
+        _coupeKey.currentState?.clearReels();
+      }
+
+      // Create new reel configuration
+      final newReel = MotherReelData();
+      // Use the mother reel width from Prix tab if available
+      if (txtLzBobM.text.isNotEmpty) {
+        newReel.widthController.text = txtLzBobM.text;
+      }
+
+      // Add the cut
+      final cut = CutRow(width: laizeFille.toString(), qty: "1");
+      newReel.cuts.add(cut);
+
+      // Add via key to attach listeners
+      _coupeKey.currentState?.addExternalReel(newReel);
+
+      // Switch to Coupe tab
+      _tabController.animateTo(2);
+    });
   }
 
   @override
@@ -252,31 +290,87 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
     }
   }
 
-  void _performTransfer(double laizeFille, {required bool overwrite}) {
-    setState(() {
-      if (overwrite) {
-        for (var reel in _motherReels) {
-          reel.dispose();
+  // --- Article Integration ---
+  Article? _selectedArticle;
+  Client? _selectedClient;
+
+  Future<void> _loadArticle() async {
+    final article = await showDialog<Article>(
+      context: context,
+      builder: (context) => const ArticleSelectionDialog(),
+    );
+
+    if (article != null) {
+      setState(() {
+        _selectedArticle = article;
+        // Fetch client for share info
+        DatabaseHelper().getClients().then((clients) {
+          final clientMap = clients
+              .firstWhere((c) => c['id'] == article.clientId, orElse: () => {});
+          if (clientMap.isNotEmpty) {
+            _selectedClient = Client.fromMap(clientMap);
+          }
+        });
+
+        // Populate fields
+        choixRepeat = article.repeat.toStringAsFixed(0);
+        // Ensure repeat is in the list, if not, add it or handle it
+        if (!Etiquette.availableRepeats.contains(choixRepeat)) {
+          // If not in list, maybe just use it anyway if we change Dropdown to accept custom?
+          // For now, if it's not in the list, we might have an issue with Dropdown.
+          // Let's assume standard repeats for now or add it to the list dynamically?
+          // Etiquette.availableRepeats is const, so we can't add.
+          // We'll try to find the closest or just set it if it matches.
         }
-        _motherReels.clear();
+
+        poseChoix = article.poseCount.toString();
+        txtLzBobFille.text = article.width.toString();
+
+        // If we have cost price, we might want to use it?
+        // But CalculPrixPage calculates cost based on Support Price.
+        // If Article has a specific Cost Price saved, maybe we should display it or use it?
+        // For now, we just load dimensions.
+
+        _recalculateAll();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Article ${article.name} loaded!')),
+        );
       }
+    }
+  }
 
-      // Create new reel configuration
-      final newReel = MotherReelData();
-      // Use the mother reel width from Prix tab if available
-      if (txtLzBobM.text.isNotEmpty) {
-        newReel.widthController.text = txtLzBobM.text;
-      }
+  Future<void> _shareCommand() async {
+    if (_selectedArticle == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez sélectionner un article')),
+      );
+      return;
+    }
 
-      // Add the cut
-      final cut = CutRow(width: laizeFille.toString(), qty: "1");
-      newReel.cuts.add(cut);
+    final text = '''
+Commande pour ${_selectedArticle!.name}
+Date: ${DateFormat('dd/MM/yyyy').format(DateTime.now())}
+Client: ${_selectedClient?.name ?? "N/A"}
 
-      _motherReels.add(newReel);
+Détails Article:
+Nom: ${_selectedArticle!.name}
+Type: ${_selectedArticle!.type}
+Machine: ${_selectedArticle!.machine}
+Laize: ${_selectedArticle!.width} mm
+Repeat: ${_selectedArticle!.repeat}
+Poses: ${_selectedArticle!.poseCount}
 
-      // Switch to Coupe tab
-      _tabController.animateTo(2);
-    });
+Détails Commande:
+Quantité Commandée: ${txtQtCommande.text}
+Métrage Nécessaire: ${formatnumeromillier.format(metrage)} m
+Nombre de Bobines Filles: $nbrbobf
+Etiquettes / Bobine Fille: ${formatnumeromillier.format(etiqbobf)}
+''';
+
+    await Share.share(text);
   }
 
   @override
@@ -321,6 +415,17 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await SupabaseService().client.auth.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              }
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -336,6 +441,7 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
               labelStyle:
                   GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.bold),
               tabs: const [
+                Tab(text: 'Commandes'),
                 Tab(text: 'Métrage'),
                 Tab(text: 'Prix'),
                 Tab(text: 'Coupe'),
@@ -400,12 +506,72 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.warehouse),
+              title: const Text('Gestion des Stocks'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const StockDashboardPage()),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.cloud_upload),
+              title: const Text('Migrer vers Supabase'),
+              onTap: () async {
+                Navigator.pop(context);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Confirmer la migration'),
+                    content: const Text(
+                        'Voulez-vous envoyer toutes les données locales vers Supabase ? Cela peut prendre quelques secondes.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Annuler'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Migrer'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Migration en cours...'),
+                          duration: Duration(seconds: 10)),
+                    );
+                  }
+
+                  await DataMigrationService().migrateAllData();
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Migration terminée avec succès !'),
+                          backgroundColor: Colors.green),
+                    );
+                  }
+                }
+              },
+            ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
+          const OrdersPage(),
           CalculMetragePage(
             txtQtCommande: txtQtCommande,
             txtQtMetrage: txtQtMetrage,
@@ -427,6 +593,8 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
                 _recalculateAll();
               });
             },
+            onLoadArticle: _loadArticle,
+            onShare: _shareCommand,
           ),
           CalculPrixPage(
             txtLzBobM: txtLzBobM,
@@ -440,6 +608,7 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
             chutteBobMere: chutteBobMere,
             etiqbobMere: etiqbobMere,
             etiqbobFille: etiqbobf,
+            metrage: metrage, // Added
             prixrevienEtiquetteTTC: prixrevienEtiquetteTTC,
             formatnumeromillier: formatnumeromillier,
             onInclureChuteChanged: (val) {
@@ -451,8 +620,10 @@ class _CalculatorHostPageState extends State<CalculatorHostPage>
             onCoefChanged: _calculePrixVente,
             onPrixTTCChanged: _calculeCoefVente,
             onTransferToCoupe: _transferToCoupe,
+            onLoadArticle: _loadArticle,
+            onShare: _shareCommand,
           ),
-          CalculCoupePage(motherReels: _motherReels),
+          CalculCoupePage(key: _coupeKey, motherReels: _motherReels),
           const CalculPiecePage(),
           const CalculManchonPage(),
         ],

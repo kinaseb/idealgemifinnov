@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/supabase_service.dart';
 import '../class/client.dart';
-import '../services/database_helper.dart';
+import '../widgets/avatar_image.dart';
 
 class ClientFormPage extends StatefulWidget {
   final Client? client;
-
   const ClientFormPage({super.key, this.client});
 
   @override
@@ -59,21 +59,79 @@ class _ClientFormPageState extends State<ClientFormPage> {
 
   Future<void> _saveClient() async {
     if (_formKey.currentState!.validate()) {
-      final client = Client(
-        id: widget.client?.id,
-        name: _nameController.text,
-        contactInfo: _contactController.text,
-        logoPath: _logoPath,
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
 
-      if (widget.client == null) {
-        await DatabaseHelper().insertClient(client.toMap());
-      } else {
-        await DatabaseHelper().updateClient(client.toMap());
-      }
+      try {
+        String? logoUrl = _logoPath;
 
-      if (mounted) {
-        Navigator.pop(context);
+        // Upload image if it's a local file
+        if (_logoPath != null && !_logoPath!.startsWith('http')) {
+          final file = File(_logoPath!);
+          final uploadedUrl =
+              await SupabaseService().uploadImage(file, 'clients');
+          if (uploadedUrl != null) {
+            logoUrl = uploadedUrl;
+          }
+        }
+
+        final client = Client(
+          id: widget.client?.id,
+          name: _nameController.text,
+          contactInfo: _contactController.text,
+          logoPath: logoUrl,
+        );
+
+        final clientData = client.toSupabaseMap();
+
+        if (widget.client == null) {
+          // Remove ID for new entries to let Supabase generate it
+          clientData.remove('id');
+          await SupabaseService().insertClient(clientData);
+        } else {
+          await SupabaseService().updateClient(widget.client!.id!, clientData);
+        }
+
+        if (mounted) {
+          // Close loading dialog
+          Navigator.pop(context);
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.client == null
+                    ? 'Client added successfully!'
+                    : 'Client updated successfully!',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          // Close form
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          // Close loading dialog
+          Navigator.pop(context);
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving client: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
       }
     }
   }
@@ -118,15 +176,10 @@ class _ClientFormPageState extends State<ClientFormPage> {
                     ),
                   );
                 },
-                child: CircleAvatar(
+                child: AvatarImage(
+                  imagePath: _logoPath,
+                  fallbackText: '',
                   radius: 50,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
-                      _logoPath != null ? FileImage(File(_logoPath!)) : null,
-                  child: _logoPath == null
-                      ? const Icon(Icons.add_a_photo,
-                          size: 50, color: Colors.grey)
-                      : null,
                 ),
               ),
               const SizedBox(height: 20),

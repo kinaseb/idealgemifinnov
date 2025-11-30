@@ -8,10 +8,10 @@ class CalculCoupePage extends StatefulWidget {
   const CalculCoupePage({super.key, required this.motherReels});
 
   @override
-  State<CalculCoupePage> createState() => _CalculCoupePageState();
+  State<CalculCoupePage> createState() => CalculCoupePageState();
 }
 
-class _CalculCoupePageState extends State<CalculCoupePage> {
+class CalculCoupePageState extends State<CalculCoupePage> {
   final NumberFormat _numberFormat = NumberFormat("#,###.###", "fr_FR");
 
   // Global results
@@ -28,12 +28,7 @@ class _CalculCoupePageState extends State<CalculCoupePage> {
 
     // Add listeners to existing reels
     for (var reel in widget.motherReels) {
-      reel.widthController.addListener(_calculate);
-      reel.quantityController.addListener(_calculate);
-      for (var cut in reel.cuts) {
-        cut.widthController.addListener(_calculate);
-        cut.qtyController.addListener(_calculate);
-      }
+      _attachListeners(reel);
     }
 
     _calculate();
@@ -44,21 +39,52 @@ class _CalculCoupePageState extends State<CalculCoupePage> {
     // We do NOT dispose controllers here as they belong to the parent state
     // Just remove listeners
     for (var reel in widget.motherReels) {
-      reel.widthController.removeListener(_calculate);
-      reel.quantityController.removeListener(_calculate);
-      for (var cut in reel.cuts) {
-        cut.widthController.removeListener(_calculate);
-        cut.qtyController.removeListener(_calculate);
-      }
+      _removeListeners(reel);
     }
     super.dispose();
+  }
+
+  void _attachListeners(MotherReelData reel) {
+    reel.widthController.addListener(_calculate);
+    reel.quantityController.addListener(_calculate);
+    for (var cut in reel.cuts) {
+      cut.widthController.addListener(_calculate);
+      cut.qtyController.addListener(_calculate);
+    }
+  }
+
+  void _removeListeners(MotherReelData reel) {
+    reel.widthController.removeListener(_calculate);
+    reel.quantityController.removeListener(_calculate);
+    for (var cut in reel.cuts) {
+      cut.widthController.removeListener(_calculate);
+      cut.qtyController.removeListener(_calculate);
+    }
+  }
+
+  void addExternalReel(MotherReelData reel) {
+    setState(() {
+      _attachListeners(reel);
+      widget.motherReels.add(reel);
+      _calculate();
+    });
+  }
+
+  void clearReels() {
+    setState(() {
+      for (var reel in widget.motherReels) {
+        _removeListeners(reel);
+        reel.dispose();
+      }
+      widget.motherReels.clear();
+      _calculate();
+    });
   }
 
   void _addMotherReel() {
     setState(() {
       final newReel = MotherReelData();
-      newReel.widthController.addListener(_calculate);
-      newReel.quantityController.addListener(_calculate);
+      _attachListeners(newReel);
       // Add one initial cut row
       _addCutRow(newReel);
       widget.motherReels.add(newReel);
@@ -67,10 +93,9 @@ class _CalculCoupePageState extends State<CalculCoupePage> {
 
   void _removeMotherReel(int index) {
     setState(() {
-      // Dispose is handled by parent when page is disposed,
-      // but here we are removing it from the list, so we should dispose it?
-      // Actually, if we remove it from the list, we should dispose it.
-      widget.motherReels[index].dispose();
+      final reel = widget.motherReels[index];
+      _removeListeners(reel);
+      reel.dispose();
       widget.motherReels.removeAt(index);
       _calculate();
     });

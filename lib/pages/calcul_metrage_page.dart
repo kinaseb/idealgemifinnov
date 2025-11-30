@@ -11,6 +11,8 @@ class CalculMetragePage extends StatelessWidget {
   final double qtmetrage;
   final double etiqbobFille;
   final NumberFormat formatnumeromillier;
+  final VoidCallback? onLoadArticle;
+  final VoidCallback? onShare;
   final ValueChanged<String?> onRepeatChanged;
   final ValueChanged<String?> onPoseChanged;
 
@@ -26,6 +28,8 @@ class CalculMetragePage extends StatelessWidget {
     required this.formatnumeromillier,
     required this.onRepeatChanged,
     required this.onPoseChanged,
+    this.onLoadArticle,
+    this.onShare,
   });
 
   @override
@@ -38,6 +42,34 @@ class CalculMetragePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (onLoadArticle != null)
+                    ElevatedButton.icon(
+                      onPressed: onLoadArticle,
+                      icon: const Icon(Icons.download),
+                      label: const Text("Charger Article"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  if (onShare != null)
+                    ElevatedButton.icon(
+                      onPressed: onShare,
+                      icon: const Icon(Icons.share),
+                      label: const Text("Partager"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),

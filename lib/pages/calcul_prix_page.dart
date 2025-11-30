@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:ideal_calcule/class/etiquette.dart';
 import '../class/support.dart';
 import '../services/database_helper.dart';
+import '../services/supabase_service.dart';
 
 class CalculPrixPage extends StatefulWidget {
   final TextEditingController txtLzBobM;
@@ -16,12 +17,15 @@ class CalculPrixPage extends StatefulWidget {
   final int chutteBobMere;
   final double etiqbobMere;
   final double etiqbobFille;
+  final double metrage; // Added
   final double prixrevienEtiquetteTTC;
   final NumberFormat formatnumeromillier;
   final ValueChanged<String?> onInclureChuteChanged;
   final VoidCallback onCoefChanged;
   final VoidCallback onPrixTTCChanged;
   final VoidCallback? onTransferToCoupe;
+  final VoidCallback? onLoadArticle;
+  final VoidCallback? onShare;
 
   const CalculPrixPage({
     super.key,
@@ -36,12 +40,15 @@ class CalculPrixPage extends StatefulWidget {
     required this.chutteBobMere,
     required this.etiqbobMere,
     required this.etiqbobFille,
+    required this.metrage, // Added
     required this.prixrevienEtiquetteTTC,
     required this.formatnumeromillier,
     required this.onInclureChuteChanged,
     required this.onCoefChanged,
     required this.onPrixTTCChanged,
     this.onTransferToCoupe,
+    this.onLoadArticle,
+    this.onShare,
   });
 
   @override
@@ -75,6 +82,34 @@ class _CalculPrixPageState extends State<CalculPrixPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (widget.onLoadArticle != null)
+                    ElevatedButton.icon(
+                      onPressed: widget.onLoadArticle,
+                      icon: const Icon(Icons.download),
+                      label: const Text("Charger Article"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  if (widget.onShare != null)
+                    ElevatedButton.icon(
+                      onPressed: widget.onShare,
+                      icon: const Icon(Icons.share),
+                      label: const Text("Partager"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
               // Support Selection and Price
               Row(
                 children: [
@@ -266,11 +301,129 @@ class _CalculPrixPageState extends State<CalculPrixPage> {
                 Icons.money_off,
                 Colors.grey.shade200,
               ),
+              const SizedBox(height: 20),
+              if (_selectedSupport != null)
+                ElevatedButton.icon(
+                  onPressed: _deductStock,
+                  icon: const Icon(Icons.inventory_2),
+                  label: const Text('Déduire du Stock'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade800,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _deductStock() async {
+    if (_selectedSupport == null) return;
+
+    final laize = int.tryParse(widget.txtLzBobM.text) ?? 0;
+    if (laize == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Veuillez saisir la Laize Mère.')));
+      return;
+    }
+
+    if (widget.metrage <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Métrage nécessaire invalide.')));
+      return;
+    }
+
+    // Find stock
+    try {
+      final stockData =
+          await SupabaseService().findStock(_selectedSupport!.id!, laize);
+
+      if (stockData == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Aucun stock trouvé pour ce support (${_selectedSupport!.name}) et cette laize ($laize mm).')));
+        }
+        return;
+      }
+
+      final stockId = stockData['id'];
+      final stockLen = stockData['longueur'] as int;
+      final currentQty = stockData['quantity'] as int;
+
+      if (stockLen <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Stock trouvé mais longueur invalide (0).')));
+        }
+        return;
+      }
+
+      // Calculate needed rolls
+      final rollsNeeded = (widget.metrage / stockLen).ceil();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Confirmation Déduction Stock'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Support: ${_selectedSupport!.name}'),
+                Text('Laize: $laize mm'),
+                Text(
+                    'Métrage nécessaire: ${widget.formatnumeromillier.format(widget.metrage)} m'),
+                Text('Longueur bobine stock: $stockLen m'),
+                const SizedBox(height: 10),
+                Text('Bobines à déduire: $rollsNeeded',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('Stock actuel: $currentQty bobines'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Annuler'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  try {
+                    await SupabaseService().updateStockSupport(
+                        stockId,
+                        {'quantity': currentQty - rollsNeeded},
+                        -rollsNeeded,
+                        'Production (Calculateur)');
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Stock mis à jour avec succès !'),
+                          backgroundColor: Colors.green));
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                    }
+                  }
+                },
+                child: const Text('Confirmer'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur recherche stock: $e')));
+      }
+    }
   }
 
   Widget _buildInfoCard(BuildContext context, String title, String value,

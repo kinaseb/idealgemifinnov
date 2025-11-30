@@ -19,10 +19,37 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.latoTextTheme().apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-        fontSizeFactor: fontScale,
+      textTheme: GoogleFonts.latoTextTheme().copyWith(
+        bodyLarge: GoogleFonts.lato(
+            fontSize: 16 * fontScale, color: AppColors.textPrimary),
+        bodyMedium: GoogleFonts.lato(
+            fontSize: 14 * fontScale, color: AppColors.textPrimary),
+        bodySmall: GoogleFonts.lato(
+            fontSize: 12 * fontScale, color: AppColors.textPrimary),
+        titleLarge: GoogleFonts.lato(
+            fontSize: 22 * fontScale,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        titleMedium: GoogleFonts.lato(
+            fontSize: 18 * fontScale,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary),
+        titleSmall: GoogleFonts.lato(
+            fontSize: 16 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary),
+        labelLarge: GoogleFonts.lato(
+            fontSize: 14 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary),
+        labelMedium: GoogleFonts.lato(
+            fontSize: 12 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary),
+        labelSmall: GoogleFonts.lato(
+            fontSize: 11 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -96,10 +123,37 @@ class AppTheme {
         onSurface: AppColors.darkTextPrimary,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.latoTextTheme(ThemeData.dark().textTheme).apply(
-        bodyColor: AppColors.darkTextPrimary,
-        displayColor: AppColors.darkTextPrimary,
-        fontSizeFactor: fontScale,
+      textTheme: GoogleFonts.latoTextTheme(ThemeData.dark().textTheme).copyWith(
+        bodyLarge: GoogleFonts.lato(
+            fontSize: 16 * fontScale, color: AppColors.darkTextPrimary),
+        bodyMedium: GoogleFonts.lato(
+            fontSize: 14 * fontScale, color: AppColors.darkTextPrimary),
+        bodySmall: GoogleFonts.lato(
+            fontSize: 12 * fontScale, color: AppColors.darkTextPrimary),
+        titleLarge: GoogleFonts.lato(
+            fontSize: 22 * fontScale,
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkTextPrimary),
+        titleMedium: GoogleFonts.lato(
+            fontSize: 18 * fontScale,
+            fontWeight: FontWeight.w600,
+            color: AppColors.darkTextPrimary),
+        titleSmall: GoogleFonts.lato(
+            fontSize: 16 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.darkTextPrimary),
+        labelLarge: GoogleFonts.lato(
+            fontSize: 14 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.darkTextPrimary),
+        labelMedium: GoogleFonts.lato(
+            fontSize: 12 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.darkTextPrimary),
+        labelSmall: GoogleFonts.lato(
+            fontSize: 11 * fontScale,
+            fontWeight: FontWeight.w500,
+            color: AppColors.darkTextPrimary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkSurface,

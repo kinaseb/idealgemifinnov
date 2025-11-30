@@ -23,4 +23,22 @@ class Client {
       contactInfo: map['contactInfo'] as String?,
     );
   }
+  // Supabase Serialization
+  Map<String, dynamic> toSupabaseMap() {
+    return {
+      // 'id': id, // Let Supabase generate ID
+      'name': name,
+      'logo_path': logoPath,
+      'contact_info': contactInfo,
+    };
+  }
+
+  factory Client.fromSupabaseMap(Map<String, dynamic> map) {
+    return Client(
+      id: map['id'] as int?,
+      name: map['name'] as String? ?? '',
+      logoPath: map['logo_path'] as String?,
+      contactInfo: map['contact_info'] as String?,
+    );
+  }
 }

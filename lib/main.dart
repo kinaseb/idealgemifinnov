@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ideal_calcule/pages/calculator_host_page.dart';
+import 'package:ideal_calcule/pages/login_page.dart';
 import 'package:ideal_calcule/class/font_size_provider.dart';
 import 'package:ideal_calcule/theme/app_theme.dart';
 import 'package:ideal_calcule/services/database_helper.dart';
+import 'package:ideal_calcule/services/supabase_service.dart';
+import 'package:ideal_calcule/services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,9 +13,21 @@ void main() async {
   // Initialize database
   try {
     await DatabaseHelper().database;
-    print('✅ Base de données initialisée avec succès');
+    print('✅ Base de données locale initialisée');
   } catch (e) {
-    print('❌ Erreur initialisation base de données: $e');
+    print('❌ Erreur initialisation SQLite: $e');
+  }
+
+  // Initialize Supabase
+  try {
+    await SupabaseService().initialize();
+    print('✅ Supabase initialisé avec succès');
+    await SupabaseService().testConnection();
+
+    // Start Realtime Sync
+    SyncService().startSync();
+  } catch (e) {
+    print('❌ Erreur initialisation Supabase: $e');
   }
 
   // Load saved font size
@@ -43,7 +58,9 @@ class MyApp extends StatelessWidget {
               themeMode: currentMode,
               theme: AppTheme.lightTheme(fontScale),
               darkTheme: AppTheme.darkTheme(fontScale),
-              home: const CalculatorHostPage(),
+              home: SupabaseService().client.auth.currentSession != null
+                  ? const CalculatorHostPage()
+                  : const LoginPage(),
             );
           },
         );

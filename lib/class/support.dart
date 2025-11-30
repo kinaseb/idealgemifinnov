@@ -28,4 +28,22 @@ class Support {
       supplier: map['supplier'] as String?,
     );
   }
+  // Supabase Serialization
+  Map<String, dynamic> toSupabaseMap() {
+    return {
+      // 'id': id,
+      'name': name,
+      'current_price': currentPrice,
+      'supplier': supplier,
+    };
+  }
+
+  factory Support.fromSupabaseMap(Map<String, dynamic> map) {
+    return Support(
+      id: map['id'] as int?,
+      name: map['name'] as String? ?? '',
+      currentPrice: (map['current_price'] as num?)?.toDouble() ?? 0.0,
+      supplier: map['supplier'] as String?,
+    );
+  }
 }
