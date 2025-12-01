@@ -9,6 +9,7 @@ import '../class/article.dart';
 import '../class/etiquette.dart';
 import '../class/employee.dart';
 import '../pages/employees_page.dart';
+import '../pages/new_order_page.dart';
 import '../widgets/image_zoom_dialog.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/modern_card.dart';
@@ -124,7 +125,8 @@ class _OrdersPageState extends State<OrdersPage>
 
   void _calculateMetrage() {
     if (_selectedArticle != null && _quantityController.text.isNotEmpty) {
-      final qty = int.tryParse(_quantityController.text) ?? 0;
+      final qty =
+          int.tryParse(_quantityController.text.replaceAll(' ', '')) ?? 0;
       final repeat = _selectedArticle!.repeat.toInt();
       final poses = _selectedArticle!.poseCount;
 
@@ -159,7 +161,7 @@ class _OrdersPageState extends State<OrdersPage>
     if (_formKey.currentState!.validate() &&
         _selectedClient != null &&
         _selectedArticle != null) {
-      final quantity = int.parse(_quantityController.text);
+      final quantity = int.parse(_quantityController.text.replaceAll(' ', ''));
       final orderRef =
           'CMD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
@@ -1166,6 +1168,25 @@ Poses: ${article.poseCount}
                     _searchQuery = val;
                     _filterOrders();
                   },
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NewOrderPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('Nouvelle Commande'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
               ),
               const SizedBox(width: 8),

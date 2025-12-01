@@ -1,5 +1,5 @@
 name: ideal_calcule
-description:  "A new Flutter project."
+description: "A new Flutter project."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -26,6 +26,7 @@ dependencies:
   printing: ^5.14.2
   supabase_flutter: ^2.10.3
   data_table_2: ^2.7.2
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
