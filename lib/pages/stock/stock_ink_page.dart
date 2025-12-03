@@ -54,7 +54,8 @@ class _StockInkPageState extends State<StockInkPage> {
               TextField(
                 controller: quantityController,
                 decoration: const InputDecoration(labelText: 'Quantité (Kg)'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               TextField(
                 controller: supplierController,

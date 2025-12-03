@@ -15,6 +15,9 @@ import './clients_page.dart';
 import './supports_page.dart';
 import 'stock/stock_dashboard_page.dart';
 import './orders_page.dart';
+import './trash_page.dart';
+import './repeats_page.dart';
+import './machines_page.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../class/article.dart';
@@ -515,6 +518,40 @@ Etiquettes / Bobine Fille: ${formatnumeromillier.format(etiqbobf)}
                   context,
                   MaterialPageRoute(
                       builder: (context) => const StockDashboardPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.precision_manufacturing, color: Colors.blue),
+              title: const Text('Machines'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MachinesPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.circle, color: Colors.purple),
+              title: const Text('Repeats (Clichés)'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RepeatsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.orange),
+              title: const Text('Corbeille'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TrashPage()),
                 );
               },
             ),

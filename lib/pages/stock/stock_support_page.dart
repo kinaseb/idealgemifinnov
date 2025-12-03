@@ -69,7 +69,7 @@ class _StockSupportPageState extends State<StockSupportPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<int>(
-                  value: selectedSupportId,
+                  initialValue: selectedSupportId,
                   items: _availableSupports.map((s) {
                     return DropdownMenuItem(
                       value: s.id,

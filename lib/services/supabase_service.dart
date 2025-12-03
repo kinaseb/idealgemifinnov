@@ -289,11 +289,70 @@ class SupabaseService {
     await client.from('orders').delete().eq('id', id);
   }
 
+  Future<int> countOrdersByClient(int clientId) async {
+    try {
+      final response = await client
+          .from('orders')
+          .select('id')
+          .eq('client_id', clientId)
+          .count(CountOption.exact);
+      return response.count;
+    } catch (e) {
+      print('❌ Erreur comptage commandes: $e');
+      return 0;
+    }
+  }
+
   Future<void> updateStockPlate(int id, Map<String, dynamic> data) async {
     await client.from('stocks_cliches').update(data).eq('id', id);
   }
 
   Future<void> deleteStockPlate(int id) async {
     await client.from('stocks_cliches').delete().eq('id', id);
+  }
+
+  // --- CRUD Machine Types ---
+  Future<List<Map<String, dynamic>>> getMachineTypes() async {
+    return await client.from('machine_types').select().order('name');
+  }
+
+  Future<void> insertMachineType(Map<String, dynamic> data) async {
+    await client.from('machine_types').insert(data);
+  }
+
+  Future<void> updateMachineType(int id, Map<String, dynamic> data) async {
+    await client.from('machine_types').update(data).eq('id', id);
+  }
+
+  Future<void> deleteMachineType(int id) async {
+    await client.from('machine_types').delete().eq('id', id);
+  }
+
+  // ---  CRUD Machines ---
+  Future<List<Map<String, dynamic>>> getMachines() async {
+    return await client
+        .from('machines')
+        .select('*, machine_types(name)')
+        .order('reference');
+  }
+
+  Future<List<Map<String, dynamic>>> getMachinesByType(int typeId) async {
+    return await client
+        .from('machines')
+        .select('*, machine_types(name)')
+        .eq('type_id', typeId)
+        .order('reference');
+  }
+
+  Future<void> insertMachine(Map<String, dynamic> data) async {
+    await client.from('machines').insert(data);
+  }
+
+  Future<void> updateMachine(int id, Map<String, dynamic> data) async {
+    await client.from('machines').update(data).eq('id', id);
+  }
+
+  Future<void> deleteMachine(int id) async {
+    await client.from('machines').delete().eq('id', id);
   }
 }

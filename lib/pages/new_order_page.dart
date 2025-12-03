@@ -8,7 +8,6 @@ import '../class/etiquette.dart';
 import '../widgets/modern_card.dart';
 import '../widgets/image_zoom_dialog.dart';
 import '../pages/employees_page.dart';
-import '../class/employee.dart';
 
 class NewOrderPage extends StatefulWidget {
   const NewOrderPage({super.key});

@@ -11,11 +11,14 @@ class Article {
   int poseCount; // nbr pose
   bool amalgam;
   double width; // laize
-  String machine; // 'ZJR 450', 'Alpha 240'
+  int? machineId; // Foreign key to machines table
   int colorCount; // nbr couleur
   double sleeveCase; // etuit (0 if not sleeve)
   int labelsPerReel; // nbr etiq/bobine livraison
   String core; // mandrin
+
+  // Joined field from machines table
+  String? machineName;
 
   Article({
     this.id,
@@ -30,11 +33,12 @@ class Article {
     required this.poseCount,
     required this.amalgam,
     required this.width,
-    required this.machine,
+    this.machineId,
     required this.colorCount,
     this.sleeveCase = 0.0,
     required this.labelsPerReel,
     required this.core,
+    this.machineName,
   });
 
   Map<String, dynamic> toMap() {
@@ -51,7 +55,7 @@ class Article {
       'poseCount': poseCount,
       'amalgam': amalgam ? 1 : 0,
       'width': width,
-      'machine': machine,
+      'machineId': machineId,
       'colorCount': colorCount,
       'sleeveCase': sleeveCase,
       'labelsPerReel': labelsPerReel,
@@ -73,13 +77,15 @@ class Article {
       poseCount: map['poseCount'] as int? ?? 1,
       amalgam: (map['amalgam'] as int? ?? 0) == 1,
       width: (map['width'] as num?)?.toDouble() ?? 0.0,
-      machine: map['machine'] as String? ?? 'ZJR 450',
+      machineId: map['machineId'] as int?,
       colorCount: map['colorCount'] as int? ?? 0,
       sleeveCase: (map['sleeveCase'] as num?)?.toDouble() ?? 0.0,
       labelsPerReel: map['labelsPerReel'] as int? ?? 0,
       core: map['core'] as String? ?? '',
+      machineName: map['machineName'] as String?,
     );
   }
+
   // Supabase Serialization
   Map<String, dynamic> toSupabaseMap() {
     return {
@@ -95,7 +101,7 @@ class Article {
       'pose_count': poseCount,
       'amalgam': amalgam,
       'width': width,
-      'machine': machine,
+      'machine_id': machineId,
       'color_count': colorCount,
       'sleeve_case': sleeveCase,
       'labels_per_reel': labelsPerReel,
@@ -117,11 +123,17 @@ class Article {
       poseCount: map['pose_count'] as int? ?? 1,
       amalgam: map['amalgam'] as bool? ?? false,
       width: (map['width'] as num?)?.toDouble() ?? 0.0,
-      machine: map['machine'] as String? ?? 'ZJR 450',
+      machineId: map['machine_id'] as int?,
       colorCount: map['color_count'] as int? ?? 0,
       sleeveCase: (map['sleeve_case'] as num?)?.toDouble() ?? 0.0,
       labelsPerReel: map['labels_per_reel'] as int? ?? 0,
       core: map['core'] as String? ?? '',
+      machineName: map['machines'] != null
+          ? map['machines']['reference'] as String?
+          : null,
     );
   }
+
+  // Getter for backward compatibility
+  String get machine => machineName ?? '';
 }

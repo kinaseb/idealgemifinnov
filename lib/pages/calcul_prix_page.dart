@@ -116,7 +116,7 @@ class _CalculPrixPageState extends State<CalculPrixPage> {
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<Support>(
-                      value: _selectedSupport,
+                      initialValue: _selectedSupport,
                       decoration: const InputDecoration(
                         labelText: 'Choisir Support',
                         prefixIcon: Icon(Icons.category),
@@ -226,7 +226,7 @@ class _CalculPrixPageState extends State<CalculPrixPage> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: widget.choixInclureChute,
+                      initialValue: widget.choixInclureChute,
                       decoration: const InputDecoration(
                         labelText: 'Inclure la chute',
                         prefixIcon: Icon(Icons.delete_outline),

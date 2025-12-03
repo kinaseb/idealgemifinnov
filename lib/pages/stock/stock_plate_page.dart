@@ -56,7 +56,7 @@ class _StockPlatePageState extends State<StockPlatePage> {
                   decoration: const InputDecoration(labelText: 'Emplacement'),
                 ),
                 DropdownButtonFormField<String>(
-                  value: status,
+                  initialValue: status,
                   items: ['Good', 'Worn', 'Damaged']
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),

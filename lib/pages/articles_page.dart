@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../class/client.dart';
 import '../class/article.dart';
 import '../services/database_helper.dart';
+import '../services/supabase_service.dart';
 import '../services/sync_service.dart';
+import '../services/trash_service.dart';
 import '../widgets/avatar_image.dart';
 import 'article_form_page.dart';
 
@@ -166,7 +168,24 @@ class _ArticlesPageState extends State<ArticlesPage> {
                       );
 
                       if (confirm == true) {
-                        await DatabaseHelper().deleteArticle(article.id!);
+                        // Move to trash (soft delete)
+                        await TrashService().moveToTrash(
+                          entityType: 'article',
+                          entityId: article.id!,
+                          entityData: article.toMap(),
+                        );
+                        // Also delete from Supabase
+                        await SupabaseService().deleteArticle(article.id!);
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('✓ Article déplacé vers la corbeille'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
                         _refreshArticles();
                       }
                     },

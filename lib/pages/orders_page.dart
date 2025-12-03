@@ -600,7 +600,7 @@ Poses: ${article.poseCount}
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: targetStatus,
+                    initialValue: targetStatus,
                     items: statuses
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                         .toList(),
@@ -1233,8 +1233,8 @@ Poses: ${article.poseCount}
                     onSort: (columnIndex, ascending) => _sort<num>(
                         (d) => d['quantity'], columnIndex, ascending),
                   ),
-                  DataColumn2(
-                    label: const Text('Statut'),
+                  const DataColumn2(
+                    label: Text('Statut'),
                     size: ColumnSize.S,
                   ),
                   const DataColumn2(
@@ -1316,18 +1316,27 @@ Poses: ${article.poseCount}
       'Livraison'
     ];
 
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.all(16),
-      itemCount: columns.length,
-      itemBuilder: (context, index) {
-        final status = columns[index];
-        final ordersInStatus = _filteredOrders
-            .where((o) => (o['status'] ?? 'En attente') == status)
-            .toList();
+    final scrollController = ScrollController();
 
-        return _buildKanbanColumn(status, ordersInStatus);
-      },
+    return Scrollbar(
+      controller: scrollController,
+      thumbVisibility: true, // Always show scrollbar on Windows
+      thickness: 8.0,
+      radius: const Radius.circular(4),
+      child: ListView.builder(
+        controller: scrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.all(16),
+        itemCount: columns.length,
+        itemBuilder: (context, index) {
+          final status = columns[index];
+          final ordersInStatus = _filteredOrders
+              .where((o) => (o['status'] ?? 'En attente') == status)
+              .toList();
+
+          return _buildKanbanColumn(status, ordersInStatus);
+        },
+      ),
     );
   }
 

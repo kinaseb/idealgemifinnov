@@ -16,8 +16,11 @@ class SyncService {
   final _changeController = StreamController<void>.broadcast();
   Stream<void> get onChange => _changeController.stream;
 
+  // ignore: unused_field
   RealtimeChannel? _clientsChannel;
+  // ignore: unused_field
   RealtimeChannel? _supportsChannel;
+  // ignore: unused_field
   RealtimeChannel? _articlesChannel;
 
   Future<void> startSync() async {

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../class/article.dart';
 import '../class/client.dart';
 import '../class/support.dart';
+import '../class/machine.dart';
 import '../services/database_helper.dart';
 import '../services/supabase_service.dart';
 import '../widgets/avatar_image.dart';
@@ -37,11 +38,13 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
   // State variables
   String? _photoPath;
   String _selectedType = 'etiquette';
-  String _selectedMachine = 'ZJR 450';
+  int? _selectedMachineId;
   int? _selectedSupportId;
   bool _isAmalgam = false;
   List<Support> _supports = [];
   bool _isLoadingSupports = true;
+  List<Machine> _machines = [];
+  bool _isLoadingMachines = true;
 
   // Machine Repeats
   List<double> _availableRepeats = [];
@@ -52,7 +55,10 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
     super.initState();
     _initializeControllers();
     _loadSupports();
-    _loadRepeatsForMachine(_selectedMachine);
+    _loadMachines();
+    if (widget.article?.machineId != null) {
+      _loadRepeatsForMachineId(widget.article!.machineId!);
+    }
   }
 
   void _initializeControllers() {
@@ -76,30 +82,47 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
     if (a != null) {
       _photoPath = a.photo;
       _selectedType = a.type;
-      _selectedMachine = a.machine;
+      _selectedMachineId = a.machineId;
       _selectedSupportId = a.supportId;
       _isAmalgam = a.amalgam;
       _selectedRepeat = a.repeat;
     }
   }
 
-  Future<void> _loadRepeatsForMachine(String machine) async {
-    final repeats = await DatabaseHelper().getRepeatsForMachine(machine);
+  Future<void> _loadMachines() async {
+    final data = await DatabaseHelper().getMachines();
+    setState(() {
+      _machines = data.map((e) => Machine.fromMap(e)).toList();
+      _isLoadingMachines = false;
+
+      // If editing and machine not found (deleted?), clear selection
+      if (_selectedMachineId != null &&
+          !_machines.any((m) => m.id == _selectedMachineId)) {
+        _selectedMachineId = null;
+      }
+    });
+  }
+
+  Future<void> _loadRepeatsForMachineId(int machineId) async {
+    final machine = _machines.firstWhere((m) => m.id == machineId,
+        orElse: () => _machines.first);
+    final repeats =
+        await DatabaseHelper().getRepeatsForMachine(machine.reference);
     setState(() {
       _availableRepeats = repeats;
       if (_selectedRepeat != null &&
           !_availableRepeats.contains(_selectedRepeat)) {
-        // If current repeat not in list (maybe new machine?), add it temporarily or handle it
         _availableRepeats.add(_selectedRepeat!);
         _availableRepeats.sort();
       }
-      // If no repeat selected and list not empty, select first? No, let user choose.
     });
   }
 
   Future<void> _addRepeat(double value) async {
-    await DatabaseHelper().insertMachineRepeat(_selectedMachine, value);
-    await _loadRepeatsForMachine(_selectedMachine);
+    if (_selectedMachineId == null) return;
+    final machine = _machines.firstWhere((m) => m.id == _selectedMachineId);
+    await DatabaseHelper().insertMachineRepeat(machine.reference, value);
+    await _loadRepeatsForMachineId(_selectedMachineId!);
     setState(() {
       _selectedRepeat = value;
     });
@@ -180,7 +203,7 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
           poseCount: int.tryParse(_poseCountController.text) ?? 1,
           amalgam: _isAmalgam,
           width: double.tryParse(_widthController.text) ?? 0.0,
-          machine: _selectedMachine,
+          machineId: _selectedMachineId,
           colorCount: int.tryParse(_colorCountController.text) ?? 0,
           sleeveCase: _selectedType == 'sleeve'
               ? (double.tryParse(_sleeveCaseController.text) ?? 0.0)
@@ -319,7 +342,7 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
 
             // Type
             DropdownButtonFormField<String>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(labelText: 'Type'),
               items: ['etiquette', 'sleeve', 'autre']
                   .map((t) => DropdownMenuItem(
@@ -345,7 +368,7 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
             _isLoadingSupports
                 ? const LinearProgressIndicator()
                 : DropdownButtonFormField<int>(
-                    value: _selectedSupportId,
+                    initialValue: _selectedSupportId,
                     decoration:
                         const InputDecoration(labelText: 'Support (Material)'),
                     items: _supports
@@ -360,56 +383,61 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
                   ),
             const SizedBox(height: 12),
 
-            // Technical Specs Row 1
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedMachine,
+            // Machine and Repeat Selection
+            _isLoadingMachines
+                ? const LinearProgressIndicator()
+                : DropdownButtonFormField<int>(
+                    initialValue: _selectedMachineId,
                     decoration: const InputDecoration(labelText: 'Machine'),
-                    items: ['ZJR 450', 'Alpha 240']
+                    items: _machines
                         .map((m) => DropdownMenuItem(
-                              value: m,
-                              child: Text(m),
+                              value: m.id,
+                              child: Text(m.displayName),
                             ))
                         .toList(),
                     onChanged: (v) {
                       setState(() {
-                        _selectedMachine = v!;
+                        _selectedMachineId = v;
                         _selectedRepeat =
                             null; // Reset repeat on machine change
-                        _loadRepeatsForMachine(v);
+                        if (v != null) {
+                          _loadRepeatsForMachineId(v);
+                        }
                       });
                     },
+                    validator: (v) => v == null ? 'Required' : null,
+                  ),
+            const SizedBox(height: 12),
+            // Repeat Selection
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<double>(
+                    initialValue: _selectedRepeat,
+                    decoration: const InputDecoration(labelText: 'Repeat'),
+                    items: _availableRepeats.map((r) {
+                      return DropdownMenuItem(
+                        value: r,
+                        child: Text(r.toString()),
+                      );
+                    }).toList(),
+                    onChanged: (v) => setState(() => _selectedRepeat = v),
+                    validator: (v) => v == null ? 'Required' : null,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<double>(
-                          value: _selectedRepeat,
-                          decoration:
-                              const InputDecoration(labelText: 'Repeat'),
-                          items: _availableRepeats.map((r) {
-                            return DropdownMenuItem(
-                              value: r,
-                              child: Text(r.toString()),
-                            );
-                          }).toList(),
-                          onChanged: (v) => setState(() => _selectedRepeat = v),
-                          validator: (v) => v == null ? 'Required' : null,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () {
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _selectedMachineId == null
+                      ? null
+                      : () {
                           final controller = TextEditingController();
+                          final machine = _machines
+                              .firstWhere((m) => m.id == _selectedMachineId);
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Add Repeat for $_selectedMachine'),
+                              title:
+                                  Text('Add Repeat for ${machine.reference}'),
                               content: TextField(
                                 controller: controller,
                                 keyboardType: TextInputType.number,
@@ -437,9 +465,6 @@ class _ArticleFormPageState extends State<ArticleFormPage> {
                             ),
                           );
                         },
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

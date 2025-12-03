@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../class/client.dart';
 import '../services/database_helper.dart';
+import '../services/supabase_service.dart';
 import '../services/sync_service.dart';
+import '../services/trash_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/delete_confirmation_dialog.dart';
 import 'client_form_page.dart';
 import 'articles_page.dart';
 
@@ -69,6 +72,74 @@ class _ClientsPageState extends State<ClientsPage> {
     });
   }
 
+  Future<void> _deleteClient(Client client) async {
+    try {
+      // Count related items
+      final db = DatabaseHelper();
+      final articleCount = await db.countArticlesByClient(client.id!);
+
+      // Show confirmation dialog
+      final confirmed = await DeleteConfirmationDialog.show(
+        context,
+        entityType: 'client',
+        entityName: client.name,
+        relatedItems: {
+          if (articleCount > 0)
+            'article${articleCount > 1 ? 's' : ''}': articleCount,
+        },
+      );
+
+      if (confirmed == true && mounted) {
+        try {
+          // Move to trash (soft delete) instead of hard delete
+          await TrashService().moveToTrash(
+            entityType: 'client',
+            entityId: client.id!,
+            entityData: client.toMap(),
+            relatedData: {
+              'articleCount': articleCount,
+            },
+          );
+
+          // Also delete from Supabase
+          await SupabaseService().deleteClient(client.id!);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✓ Client déplacé vers la corbeille'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            _refreshClients();
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ Erreur: $e'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading if open
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Erreur lors de la suppression: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,7 +190,55 @@ class _ClientsPageState extends State<ClientsPage> {
                   ),
                   title: Text(client.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(client.contactInfo ?? ''),
+                  subtitle: FutureBuilder<int>(
+                    future: DatabaseHelper().countArticlesByClient(client.id!),
+                    builder: (context, snapshot) {
+                      final articleCount = snapshot.data ?? 0;
+                      return FutureBuilder<int>(
+                        future:
+                            SupabaseService().countOrdersByClient(client.id!),
+                        builder: (context, orderSnapshot) {
+                          final orderCount = orderSnapshot.data ?? 0;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (client.contactInfo != null &&
+                                  client.contactInfo!.isNotEmpty)
+                                Text(client.contactInfo!),
+                              Row(
+                                children: [
+                                  Icon(Icons.article,
+                                      size: 14, color: Colors.blue[700]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$articleCount',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Icon(Icons.shopping_cart,
+                                      size: 14, color: Colors.orange[700]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$orderCount cmd',
+                                    style: TextStyle(
+                                      color: Colors.orange[700],
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  isThreeLine: true,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -146,10 +265,7 @@ class _ClientsPageState extends State<ClientsPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await DatabaseHelper().deleteClient(client.id!);
-                          _refreshClients();
-                        },
+                        onPressed: () => _deleteClient(client),
                       ),
                     ],
                   ),
